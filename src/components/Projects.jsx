@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { featuredProjects, githubReposUrl, otherProjects, projectFilters } from '../data/portfolio.js';
 import { useInView, useTilt } from '../lib/hooks.js';
 import { Dialog, Reveal, SectionHead } from './Common.jsx';
@@ -41,7 +41,45 @@ function ProjectCard({ p, index, onOpen }) {
   );
 }
 
+// Floating repository card that trails the pointer over the archive list.
+function useArchivePreview() {
+  const [repo, setRepo] = useState(null);
+  const ref = useRef(null);
+  const enabled = typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const pos = { x: 0, y: 0, tx: 0, ty: 0 };
+    let raf = 0;
+    const tick = () => {
+      pos.x += (pos.tx - pos.x) * 0.18;
+      pos.y += (pos.ty - pos.y) * 0.18;
+      if (ref.current) ref.current.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0) rotate(${((pos.tx - pos.x) * 0.04).toFixed(2)}deg)`;
+      raf = Math.abs(pos.tx - pos.x) + Math.abs(pos.ty - pos.y) > 0.2 ? requestAnimationFrame(tick) : 0;
+    };
+    const onMove = (e) => {
+      pos.tx = e.clientX + 24;
+      pos.ty = e.clientY - 60;
+      if (!pos.x) {
+        pos.x = pos.tx;
+        pos.y = pos.ty;
+      }
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, [enabled]);
+  return { repo, setRepo: enabled ? setRepo : () => {}, ref };
+}
+
 export default function Projects() {
+  const preview = useArchivePreview();
+  const [lastRepo, setLastRepo] = useState(null);
+  useEffect(() => {
+    if (preview.repo) setLastRepo(preview.repo);
+  }, [preview.repo]);
   const [filter, setFilter] = useState('all');
   const [openId, setOpenId] = useState(null);
   const [showAll, setShowAll] = useState(false);
@@ -83,10 +121,10 @@ export default function Projects() {
             </h3>
             <p>All remaining repositories from my GitHub profile.</p>
           </div>
-          <ul className="archive__list">
+          <ul className="archive__list" onPointerLeave={() => preview.setRepo(null)}>
             {archive.map((r) => (
               <li key={r.name}>
-                <a href={r.url} target="_blank" rel="noopener noreferrer">
+                <a href={r.url} target="_blank" rel="noopener noreferrer" onPointerEnter={() => preview.setRepo(r)}>
                   <span className="archive__name">{r.name}</span>
                   <span className="archive__desc">{r.desc}</span>
                   <span className="archive__lang">{r.lang}</span>
@@ -95,6 +133,19 @@ export default function Projects() {
               </li>
             ))}
           </ul>
+          <div className={`repo-peek${preview.repo ? ' is-on' : ''}`} ref={preview.ref} aria-hidden="true">
+            {lastRepo && (
+              <>
+                <p className="repo-peek__path">github.com/PankajBaduwal/</p>
+                <p className="repo-peek__name">{lastRepo.name}</p>
+                <p className="repo-peek__desc">{lastRepo.desc}</p>
+                <p className="repo-peek__lang">
+                  <span className={`repo-peek__dot repo-peek__dot--${lastRepo.lang.toLowerCase()}`} />
+                  {lastRepo.lang}
+                </p>
+              </>
+            )}
+          </div>
           <div className="archive__more">
             {!showAll && (
               <button type="button" className="btn btn--ghost" onClick={() => setShowAll(true)}>
