@@ -1,10 +1,20 @@
 import { useEffect, useState } from 'react';
 import { navItems, profile } from '../data/portfolio.js';
 
-export default function Nav() {
+export default function Nav({ cardThumb }) {
   const [active, setActive] = useState('home');
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [docked, setDocked] = useState(false);
+
+  // Once the hero card leaves the screen it docks into the logo as a badge.
+  useEffect(() => {
+    const hero = document.getElementById('home');
+    if (!hero || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(([e]) => setDocked(!e.isIntersecting), { threshold: 0, rootMargin: '-35% 0px 0px 0px' });
+    io.observe(hero);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -40,8 +50,15 @@ export default function Nav() {
         Skip to content
       </a>
       <div className="nav__inner container">
-        <a className="nav__logo" href="#home" aria-label={`${profile.name} — home`}>
-          <span className="nav__mono">PB</span>
+        <a className={`nav__logo${docked && cardThumb ? ' is-docked' : ''}`} href="#home" aria-label={`${profile.name} — home`}>
+          <span className="nav__flip" aria-hidden="true">
+            <span className="nav__mono">PB</span>
+            {cardThumb && (
+              <span className="nav__badge">
+                <img src={cardThumb} alt="" width="22" height="35" draggable="false" />
+              </span>
+            )}
+          </span>
           <span className="nav__name">{profile.name}</span>
         </a>
         <nav aria-label="Primary">

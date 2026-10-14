@@ -1,5 +1,6 @@
 // The signature WebGL scene: a modelled identity card with real thickness,
-// a raised photo laminate, controlled key/rim lighting and contact shadows.
+// a raised photo laminate, hung from a simulated lanyard, with controlled
+// key/rim lighting and contact shadows.
 import { useEffect, useMemo, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Lightformer } from '@react-three/drei';
@@ -68,8 +69,101 @@ function spring(state, target, dt, stiffness = 90, damping = 14) {
   state.x += state.v * dt;
 }
 
-function Card({ faces, control, introRef, reducedMotion }) {
-  const group = useRef();
+// --- Lanyard -------------------------------------------------------------
+// A small position-based rope: fixed anchor above the frame, a heavy end where
+// the clip meets the card. Cheap enough to run every frame on phones.
+const ROPE_N = 18;
+const STEP = 1 / 120;
+const GRAVITY = 11;
+const DAMP = 0.992;
+const STRAP_W = 0.3; // card-local units, matches the clamp
+// card-local layout below the rope end (rope end = top of the clamp)
+const CLAMP_H = 0.14;
+const RING_R = 0.085;
+const SLOT_FROM_TOP = ((SLOT.y + SLOT.h / 2) * CARD.w) / TEX.w;
+const HOLE_Y = -0.32;
+const CARD_Y = HOLE_Y + SLOT_FROM_TOP - CARD.h / 2; // card centre relative to the rope end
+
+function makeRope(anchor, end) {
+  const pts = [];
+  for (let i = 0; i < ROPE_N; i++) {
+    const t = i / (ROPE_N - 1);
+    pts.push({
+      p: new THREE.Vector3().lerpVectors(anchor, end, t),
+      q: new THREE.Vector3().lerpVectors(anchor, end, t),
+      w: i === 0 ? 0 : i === ROPE_N - 1 ? 0.06 : 1,
+    });
+  }
+  return { pts, seg: anchor.distanceTo(end) / (ROPE_N - 1), acc: 0 };
+}
+
+const tmp = new THREE.Vector3();
+
+function stepRope(rope, dragTarget, wind) {
+  const { pts, seg } = rope;
+  const last = pts[ROPE_N - 1];
+  for (let i = 1; i < ROPE_N; i++) {
+    const pt = pts[i];
+    if (i === ROPE_N - 1 && dragTarget) {
+      // pinned to the pointer; keep the motion so release carries momentum
+      pt.q.copy(pt.p);
+      pt.p.lerp(dragTarget, 0.25);
+      continue;
+    }
+    tmp.copy(pt.p).sub(pt.q).multiplyScalar(DAMP);
+    pt.q.copy(pt.p);
+    pt.p.add(tmp);
+    pt.p.y -= GRAVITY * STEP * STEP;
+    pt.p.x += wind.x * STEP * STEP;
+    pt.p.z += wind.z * STEP * STEP;
+  }
+  for (let k = 0; k < 14; k++) {
+    for (let i = 0; i < ROPE_N - 1; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const wa = a.w;
+      const wb = i + 1 === ROPE_N - 1 && dragTarget ? 0 : b.w;
+      const sum = wa + wb;
+      if (!sum) continue;
+      tmp.copy(b.p).sub(a.p);
+      const d = tmp.length() || 1e-6;
+      // inextensible, but allowed to go slack
+      if (d <= seg) continue;
+      tmp.multiplyScalar((d - seg) / d / sum);
+      a.p.addScaledVector(tmp, wa);
+      b.p.addScaledVector(tmp, -wb);
+    }
+  }
+  return last;
+}
+
+function makeStrapTexture(anisotropy) {
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 96;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#141925';
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#26304a';
+  ctx.fillRect(0, 6, c.width, 3);
+  ctx.fillRect(0, c.height - 9, c.width, 3);
+  ctx.fillStyle = '#8193cf';
+  ctx.font = '500 34px "Geist Mono Variable", ui-monospace, monospace';
+  ctx.textBaseline = 'middle';
+  const label = 'PANKAJ BADUWAL  ·  ';
+  const w = ctx.measureText(label).width;
+  for (let x = 24; x < c.width; x += w) ctx.fillText(label, x, c.height / 2 + 1);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = THREE.RepeatWrapping;
+  t.anisotropy = anisotropy;
+  return t;
+}
+
+function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
+  const outer = useRef();
+  const inner = useRef();
+  const strap = useRef();
   const sweep = useRef();
   const key = useRef();
   const glint = useRef();
@@ -78,6 +172,8 @@ function Card({ faces, control, introRef, reducedMotion }) {
   const front = useCanvasTexture(faces.front, aniso);
   const back = useCanvasTexture(faces.back, aniso);
   const photo = useCanvasTexture(faces.photo, aniso);
+  const strapTex = useMemo(() => makeStrapTexture(aniso), [aniso]);
+  useEffect(() => () => strapTex.dispose(), [strapTex]);
 
   const geos = useMemo(() => {
     const { w, h, radius } = CARD;
@@ -100,19 +196,62 @@ function Card({ faces, control, introRef, reducedMotion }) {
     const photoShape = roundedRectShape(pw, ph, PHOTO.r * k, false);
     const photoGeo = planarUV(new THREE.ShapeGeometry(photoShape, 16), pw, ph);
     photoGeo.translate(pcx, pcy, 0);
-    return { body, face, photoGeo };
+    const clamp = new THREE.BoxGeometry(STRAP_W + 0.03, CLAMP_H, 0.05);
+    clamp.translate(0, -CLAMP_H / 2, 0);
+    const ring = new THREE.TorusGeometry(RING_R, 0.012, 10, 40);
+    const ribbon = new THREE.BufferGeometry();
+    ribbon.setAttribute('position', new THREE.BufferAttribute(new Float32Array(ROPE_N * 2 * 3), 3));
+    ribbon.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(ROPE_N * 2 * 2), 2));
+    ribbon.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(ROPE_N * 2 * 3), 3));
+    const idx = [];
+    for (let i = 0; i < ROPE_N - 1; i++) {
+      const a = i * 2;
+      idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+    ribbon.setIndex(idx);
+    return { body, face, photoGeo, clamp, ring, ribbon };
   }, []);
   useEffect(() => () => Object.values(geos).forEach((g) => g.dispose()), [geos]);
 
   const faceZ = DEPTH / 2 + BEVEL + 0.0006;
-  const springs = useRef({ rx: { x: 0, v: 0 }, ry: { x: 0, v: 0 }, y: { x: 0, v: 0 } }).current;
-  // the canvas bleeds 40% past the stage on each side, so fit the card to the stage's share of it
-  const scale = Math.min(1, viewport.height / 4.8, viewport.width / 1.8 / 2.2);
+  const springs = useRef({ rx: { x: 0, v: 0 }, ry: { x: 0, v: 0 }, rz: { x: 0, v: 0 }, tx: { x: 0, v: 0 } }).current;
+
+  // Frame layout. The canvas bleeds `bleedTop` of the stage height above it,
+  // 10% below and 40% to each side; fit the card to the stage's share of it.
+  const layout = useMemo(() => {
+    const vh = viewport.height;
+    const vw = viewport.width;
+    const span = 1.1 + bleedTop; // canvas height in stage heights
+    const stageH = vh / span;
+    const scale = Math.min(1, (0.74 * stageH) / CARD.h, vw / 3.96);
+    const centerY = -((bleedTop / 2 - 0.05) / span) * vh;
+    const end = new THREE.Vector3(0, centerY - CARD_Y * scale, 0);
+    const anchor = new THREE.Vector3(0, vh / 2 + 0.4, -0.35);
+    return { vw, stageH, scale, centerY, end, anchor, shadowY: centerY - (CARD.h / 2) * scale - 0.14 };
+  }, [viewport.height, viewport.width, bleedTop]);
+
+  const ropeRef = useRef(null);
+  const grabRef = useRef(null);
+  if (!ropeRef.current || ropeRef.current.layout !== layout) {
+    const rope = makeRope(layout.anchor, layout.end);
+    rope.layout = layout;
+    // first appearance: let the card swing in from the side
+    if (!reducedMotion && !introRef.current.done && introRef.current.t < 0.5) {
+      rope.pts.forEach((pt, i) => {
+        const f = i / (ROPE_N - 1);
+        pt.p.x += 1.25 * layout.scale * f * f;
+        pt.q.copy(pt.p);
+      });
+    }
+    ropeRef.current = rope;
+  }
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 1 / 30);
     const t = state.clock.elapsedTime;
     const c = control.current;
+    const rope = ropeRef.current;
+    const { scale } = layout;
     // intro progress 0..1
     let p = 1;
     if (!reducedMotion && !introRef.current.done) {
@@ -122,19 +261,86 @@ function Card({ faces, control, introRef, reducedMotion }) {
     }
     const e = 1 - Math.pow(1 - p, 3);
     const idle = reducedMotion || c.dragging || c.hovering ? 0 : 1;
+
+    // drag: the clip follows the pointer (in world units of the stage)
+    let dragTarget = null;
+    const toWorld = (pt) => ({ x: (pt.x * layout.vw) / 3.6, y: layout.centerY + (pt.y * layout.stageH) / 2 });
+    if (c.dragging && c.grab) {
+      const last = rope.pts[ROPE_N - 1].p;
+      if (!grabRef.current) grabRef.current = { from: last.clone(), at: toWorld(c.grab) };
+      const now = toWorld(c.pointer);
+      dragTarget = tmp.set(now.x - grabRef.current.at.x, now.y - grabRef.current.at.y, 0);
+      const lim = 0.9 * scale;
+      if (dragTarget.length() > lim) dragTarget.setLength(lim);
+      dragTarget = dragTarget.add(grabRef.current.from).clone();
+      // never lift the clip above the anchor's reach
+      const reach = rope.seg * (ROPE_N - 1);
+      const off = dragTarget.clone().sub(layout.anchor);
+      if (off.length() > reach) dragTarget.copy(layout.anchor).add(off.setLength(reach));
+    } else grabRef.current = null;
+
+    const wind = {
+      x: idle * Math.sin(t * 0.7) * 0.35 + idle * Math.sin(t * 1.9) * 0.12,
+      z: idle * Math.sin(t * 0.45) * 0.4,
+    };
+    rope.acc += dt;
+    let steps = 0;
+    while (rope.acc >= STEP && steps < 6) {
+      stepRope(rope, dragTarget, wind);
+      rope.acc -= STEP;
+      steps++;
+    }
+    if (steps === 6) rope.acc = 0;
+    const pts = rope.pts;
+    const endP = pts[ROPE_N - 1].p;
+    const prevP = pts[ROPE_N - 2].p;
+    const d = tmp.copy(endP).sub(prevP).normalize();
+    // the card hangs off the clip and lags the strap a little
+    spring(springs.rz, Math.atan2(d.x, -d.y), dt, 55, 7);
+    spring(springs.tx, -Math.asin(THREE.MathUtils.clamp(d.z, -1, 1)), dt, 55, 7);
+
     const tx = c.base.rx + c.tilt.rx + (1 - e) * 0.32;
     const ty = c.base.ry + c.tilt.ry + (1 - e) * -1.15 + idle * Math.sin(t * 0.35) * 0.05;
-    const tyPos = (1 - e) * -0.55 + idle * Math.sin(t * 0.6) * 0.025;
     if (c.dragging) {
       springs.ry.x = ty;
       springs.ry.v = 0;
     } else spring(springs.ry, ty, dt);
     spring(springs.rx, tx, dt);
-    spring(springs.y, tyPos, dt, 60, 13);
-    const g = group.current;
-    g.rotation.set(springs.rx.x, springs.ry.x, 0);
-    g.position.y = springs.y.x;
-    g.scale.setScalar(scale * (0.94 + 0.06 * e));
+
+    const o = outer.current;
+    o.position.copy(endP);
+    o.rotation.set(springs.tx.x, 0, springs.rz.x, 'ZXY');
+    o.scale.setScalar(scale * (0.94 + 0.06 * e));
+    inner.current.rotation.set(springs.rx.x, springs.ry.x, 0);
+
+    // strap: a camera-facing ribbon along the rope, ending at the clamp
+    const geo = strap.current?.geometry;
+    if (geo) {
+      const pos = geo.attributes.position.array;
+      const uv = geo.attributes.uv.array;
+      const nrm = geo.attributes.normal.array;
+      const half = (STRAP_W * o.scale.x) / 2;
+      let len = 0;
+      for (let i = 0; i < ROPE_N; i++) {
+        const a = pts[Math.max(0, i - 1)].p;
+        const b = pts[Math.min(ROPE_N - 1, i + 1)].p;
+        const tdx = b.x - a.x;
+        const tdy = b.y - a.y;
+        const tl = Math.hypot(tdx, tdy) || 1;
+        const sx = -tdy / tl;
+        const sy = tdx / tl;
+        const pt = pts[i].p;
+        if (i > 0) len += pt.distanceTo(pts[i - 1].p);
+        pos.set([pt.x - sx * half, pt.y - sy * half, pt.z, pt.x + sx * half, pt.y + sy * half, pt.z], i * 6);
+        const u = len / (half * 2 * 10.6);
+        uv.set([u, 0, u, 1], i * 4);
+        nrm.set([0, 0, 1, 0, 0, 1], i * 6);
+      }
+      geo.attributes.position.needsUpdate = true;
+      geo.attributes.uv.needsUpdate = true;
+      geo.computeBoundingSphere();
+    }
+
     // light sweep reveal: a narrow light crossing the card once
     if (sweep.current) {
       sweep.current.position.x = THREE.MathUtils.lerp(-5, 5, p);
@@ -155,21 +361,34 @@ function Card({ faces, control, introRef, reducedMotion }) {
       <directionalLight position={[4, 2, -4]} intensity={2.2} color="#9fb4ff" />
       <spotLight ref={sweep} position={[-5, 0.5, 3]} angle={0.12} penumbra={0.6} intensity={0} color="#ffffff" distance={12} />
       <pointLight ref={glint} position={[0, 0, 2]} intensity={0} distance={6} decay={2} color="#dfe6ff" />
-      <group ref={group}>
-        <mesh geometry={geos.body}>
-          <meshPhysicalMaterial color="#20232b" metalness={0.75} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
-        </mesh>
-        <mesh geometry={geos.face} position-z={faceZ}>
-          <meshPhysicalMaterial map={front} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
-        </mesh>
-        <mesh geometry={geos.photoGeo} position-z={faceZ + 0.0035}>
-          <meshPhysicalMaterial map={photo} roughness={0.28} metalness={0} clearcoat={1} clearcoatRoughness={0.12} />
-        </mesh>
-        <mesh geometry={geos.face} position-z={-faceZ} rotation-y={Math.PI}>
-          <meshPhysicalMaterial map={back} roughness={0.6} metalness={0.05} clearcoat={0.25} clearcoatRoughness={0.45} />
-        </mesh>
+      <mesh ref={strap} geometry={geos.ribbon} frustumCulled={false}>
+        <meshStandardMaterial map={strapTex} roughness={0.78} metalness={0.05} side={THREE.DoubleSide} />
+      </mesh>
+      <group ref={outer}>
+        <group ref={inner}>
+          <mesh geometry={geos.clamp}>
+            <meshPhysicalMaterial color="#9aa3b5" metalness={1} roughness={0.28} clearcoat={0.6} />
+          </mesh>
+          <mesh geometry={geos.ring} position-y={-CLAMP_H - RING_R} rotation-y={Math.PI / 2}>
+            <meshPhysicalMaterial color="#b9c0cf" metalness={1} roughness={0.22} />
+          </mesh>
+          <group position-y={CARD_Y}>
+            <mesh geometry={geos.body}>
+              <meshPhysicalMaterial color="#20232b" metalness={0.75} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
+            </mesh>
+            <mesh geometry={geos.face} position-z={faceZ}>
+              <meshPhysicalMaterial map={front} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
+            </mesh>
+            <mesh geometry={geos.photoGeo} position-z={faceZ + 0.0035}>
+              <meshPhysicalMaterial map={photo} roughness={0.28} metalness={0} clearcoat={1} clearcoatRoughness={0.12} />
+            </mesh>
+            <mesh geometry={geos.face} position-z={-faceZ} rotation-y={Math.PI}>
+              <meshPhysicalMaterial map={back} roughness={0.6} metalness={0.05} clearcoat={0.25} clearcoatRoughness={0.45} />
+            </mesh>
+          </group>
+        </group>
       </group>
-      <ContactShadows position={[0, -1.75, 0]} opacity={0.6} scale={7} blur={2.6} far={3.2} resolution={512} color="#000000" />
+      <ContactShadows position={[0, layout.shadowY, 0]} opacity={0.6} scale={7} blur={2.6} far={3.2} resolution={512} color="#000000" />
       <Environment resolution={128} frames={1}>
         <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[-3, 3, 4]} scale={[4, 1.4, 1]} target={[0, 0, 0]} />
         <Lightformer form="rect" intensity={1.4} color="#8ea6ff" position={[4, -1, -3]} scale={[1, 5, 1]} target={[0, 0, 0]} />
@@ -179,7 +398,7 @@ function Card({ faces, control, introRef, reducedMotion }) {
   );
 }
 
-export default function IdCardCanvas({ faces, control, introRef, reducedMotion, active, onReady, lowPower }) {
+export default function IdCardCanvas({ faces, control, introRef, reducedMotion, active, onReady, lowPower, bleedTop = 0.45 }) {
   return (
     <Canvas
       className="card-canvas"
@@ -193,7 +412,7 @@ export default function IdCardCanvas({ faces, control, introRef, reducedMotion, 
         onReady?.();
       }}
     >
-      <Card faces={faces} control={control} introRef={introRef} reducedMotion={reducedMotion} />
+      <Card faces={faces} control={control} introRef={introRef} reducedMotion={reducedMotion} bleedTop={bleedTop} />
     </Canvas>
   );
 }

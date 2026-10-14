@@ -25,7 +25,7 @@ const TILT_Y = 0.34;
 // resting pose: turned slightly so the card's edge and thickness read at a glance
 const REST = { rx: 0.05, ry: -0.2 };
 
-export default function Hero({ introActive, onSkipIntro }) {
+export default function Hero({ introActive, onSkipIntro, onCardFace }) {
   const reducedMotion = usePrefersReducedMotion();
   const [faces, setFaces] = useState(null);
   const [urls, setUrls] = useState(null);
@@ -43,6 +43,7 @@ export default function Hero({ introActive, onSkipIntro }) {
     pointer: { x: 0, y: 0 },
     hovering: false,
     dragging: false,
+    grab: null,
   });
 
   // Draw card faces once fonts and the photo are available.
@@ -66,6 +67,7 @@ export default function Hero({ introActive, onSkipIntro }) {
       if (cancelled) return;
       setFaces({ front, back, photo: pc });
       setUrls({ front: fu, back: bu });
+      onCardFace?.(fu);
     })();
     return () => {
       cancelled = true;
@@ -89,6 +91,27 @@ export default function Hero({ introActive, onSkipIntro }) {
 
   useEffect(() => {
     if (reducedMotion) introRef.current = { t: 1, done: true };
+  }, [reducedMotion]);
+
+  // As the hero scrolls away the card recedes towards the nav, where it docks.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || reducedMotion) return undefined;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const hp = Math.min(1, Math.max(0, window.scrollY / (el.offsetHeight * 0.85)));
+      el.style.setProperty('--hp', hp.toFixed(3));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
   }, [reducedMotion]);
 
   useEffect(() => {
@@ -116,16 +139,20 @@ export default function Hero({ introActive, onSkipIntro }) {
     let drag = null;
     const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-    const onMove = (e) => {
+    const readPointer = (e) => {
       const r = stage.getBoundingClientRect();
       const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
       const ny = -(((e.clientY - r.top) / r.height) * 2 - 1);
       c.pointer.x = Math.max(-1.5, Math.min(1.5, nx));
       c.pointer.y = Math.max(-1.5, Math.min(1.5, ny));
+      return { nx, ny };
+    };
+    const onMove = (e) => {
+      const { nx, ny } = readPointer(e);
       if (drag) {
         const dx = e.clientX - drag.x;
         const dy = e.clientY - drag.y;
-        c.base.ry = drag.ry + dx * 0.011;
+        c.base.ry = drag.ry + dx * 0.009;
         c.base.rx = Math.max(-0.5, Math.min(0.5, drag.rx + dy * 0.006));
         c.tilt.rx = 0;
         c.tilt.ry = 0;
@@ -145,6 +172,9 @@ export default function Hero({ introActive, onSkipIntro }) {
     const onDown = (e) => {
       if (e.button !== undefined && e.button !== 0) return;
       drag = { x: e.clientX, y: e.clientY, ry: c.base.ry + c.tilt.ry, rx: c.base.rx + c.tilt.rx, moved: false };
+      readPointer(e);
+      // where the card was grabbed, so the lanyard clip follows the pointer from there
+      c.grab = { x: c.pointer.x, y: c.pointer.y };
       c.dragging = true;
       stage.setPointerCapture?.(e.pointerId);
       onSkipIntro?.();
@@ -154,6 +184,7 @@ export default function Hero({ introActive, onSkipIntro }) {
       if (!drag) return;
       drag = null;
       c.dragging = false;
+      c.grab = null;
       // settle on the nearest face so the card always rests readable
       const k = Math.round((c.base.ry - REST.ry) / Math.PI);
       c.base.ry = k * Math.PI + REST.ry;
@@ -230,6 +261,7 @@ export default function Hero({ introActive, onSkipIntro }) {
   };
 
   const showCanvas = use3d && faces;
+  const narrow = typeof window !== 'undefined' && window.matchMedia('(max-width: 760px)').matches;
   const cssVisible = !sceneReady;
 
   return (
@@ -286,7 +318,8 @@ export default function Hero({ introActive, onSkipIntro }) {
                       introRef={introRef}
                       reducedMotion={reducedMotion}
                       active={active}
-                      lowPower={window.matchMedia('(max-width: 760px)').matches}
+                      lowPower={narrow}
+                      bleedTop={narrow ? 0.16 : 0.45}
                       onReady={() => requestAnimationFrame(() => setSceneReady(true))}
                     />
                   </div>

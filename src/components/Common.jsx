@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { useInView } from '../lib/hooks.js';
 import { Close } from './Icons.jsx';
 
@@ -11,7 +11,22 @@ export function Reveal({ as: Tag = 'div', className = '', delay = 0, style, chil
   );
 }
 
+// Each word rises out of its own mask, in reading order.
+function MaskedWords({ text, start = 0 }) {
+  return text.split(' ').map((w, i) => (
+    <Fragment key={i}>
+      {i > 0 && ' '}
+      <span className="mask">
+        <span className="mask__in" style={{ '--w': start + i }}>
+          {w}
+        </span>
+      </span>
+    </Fragment>
+  ));
+}
+
 export function SectionHead({ index, label, title, italic, desc, id }) {
+  const titleWords = title.split(' ').length;
   return (
     <Reveal className="section-head">
       <p className="section-head__index" aria-hidden="true">
@@ -20,7 +35,13 @@ export function SectionHead({ index, label, title, italic, desc, id }) {
         <span>{label}</span>
       </p>
       <h2 className="section-head__title" id={id}>
-        {title} {italic && <em>{italic}</em>}
+        <MaskedWords text={title} />
+        {italic && ' '}
+        {italic && (
+          <em>
+            <MaskedWords text={italic} start={titleWords} />
+          </em>
+        )}
       </h2>
       {desc && <p className="section-head__desc">{desc}</p>}
     </Reveal>

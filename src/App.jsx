@@ -9,6 +9,7 @@ import Footer from './components/Footer.jsx';
 import Hero from './components/Hero.jsx';
 import Nav from './components/Nav.jsx';
 import Projects from './components/Projects.jsx';
+import SectionRail from './components/SectionRail.jsx';
 import Services from './components/Services.jsx';
 import Skills from './components/Skills.jsx';
 
@@ -23,6 +24,7 @@ export default function App() {
     }
   });
   const skip = useCallback(() => setIntro(false), []);
+  const [cardThumb, setCardThumb] = useState(null);
 
   useEffect(() => {
     if (!intro) return undefined;
@@ -46,9 +48,10 @@ export default function App() {
 
   return (
     <div className={`app${intro ? ' app--intro' : ''}`}>
-      <Nav />
+      <Nav cardThumb={cardThumb} />
+      <SectionRail />
       <main id="main">
-        <Hero introActive={intro} onSkipIntro={skip} />
+        <Hero introActive={intro} onSkipIntro={skip} onCardFace={setCardThumb} />
         <About />
         <Education />
         <Skills />
