@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pankajbaduwal.vercel.app/sitemap.xml
