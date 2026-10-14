@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import Cursor from './components/Cursor.jsx';
+import { initPointerFx } from './lib/fx.js';
 import About from './components/About.jsx';
 import Achievements from './components/Achievements.jsx';
 import Certifications from './components/Certifications.jsx';
@@ -25,6 +27,10 @@ export default function App() {
   });
   const skip = useCallback(() => setIntro(false), []);
   const [cardThumb, setCardThumb] = useState(null);
+  // first visit only: a copper wipe uncovers the page before the card swings in
+  const [curtain] = useState(intro);
+
+  useEffect(() => initPointerFx(), []);
 
   useEffect(() => {
     if (!intro) return undefined;
@@ -48,6 +54,12 @@ export default function App() {
 
   return (
     <div className={`app${intro ? ' app--intro' : ''}`}>
+      {curtain && (
+        <div className="curtain" aria-hidden="true">
+          <span className="curtain__mark">PB</span>
+        </div>
+      )}
+      <Cursor />
       <Nav cardThumb={cardThumb} />
       <SectionRail />
       <main id="main">
