@@ -1,16 +1,19 @@
 import { useMemo, useState } from 'react';
 import { featuredProjects, githubReposUrl, otherProjects, projectFilters } from '../data/portfolio.js';
-import { useTilt } from '../lib/hooks.js';
+import { useInView, useTilt } from '../lib/hooks.js';
 import { Dialog, Reveal, SectionHead } from './Common.jsx';
 import { ArrowUpRight, Github } from './Icons.jsx';
 import ProjectCover from './ProjectCover.jsx';
 
 function ProjectCard({ p, index, onOpen }) {
   const tilt = useTilt(7);
+  // touch screens have no hover, so covers play while they sit mid-screen
+  const [liveRef, centred] = useInView({ rootMargin: '-30% 0px -30% 0px', threshold: 0 }, false);
+  const noHover = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
   return (
     <li className="project" ref={tilt}>
-      <div className="project__body">
-        <ProjectCover motif={p.motif} label={p.title} />
+      <div className="project__body" ref={liveRef}>
+        <ProjectCover motif={p.motif} label={p.title} live={noHover && centred} />
         <div className="project__meta">
           <span className="project__index">{String(index + 1).padStart(2, '0')}</span>
           <span>{p.categoryLabel}</span>
