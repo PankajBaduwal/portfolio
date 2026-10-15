@@ -10,13 +10,13 @@ export const SLOT = { cx: TEX.w / 2, y: 64, w: 176, h: 38 };
 export const PHOTO = { x: 64, y: 196, w: 896, h: 780, r: 26 };
 
 const C = {
-  base: '#ffffff',
-  baseHi: '#f4f7fc',
-  ink: '#0f172a',
-  ink2: '#475569',
-  muted: '#64748b',
-  line: 'rgba(15, 23, 42, 0.126)',
-  accent: '#2563eb',
+  base: '#2e231b',
+  baseHi: '#392b21',
+  ink: '#eae6e3',
+  ink2: '#beb2a9',
+  muted: '#978476',
+  line: 'rgba(234,230,227,0.14)',
+  accent: '#f08a4b',
 };
 
 const SERIF = '"Instrument Serif", Georgia, serif';
@@ -70,12 +70,12 @@ function surface(ctx, w, h, tone = C.base, seed = 7) {
   const g = ctx.createLinearGradient(0, 0, w, h);
   g.addColorStop(0, C.baseHi);
   g.addColorStop(0.55, tone);
-  g.addColorStop(1, '#f2f4f9');
+  g.addColorStop(1, '#271e17');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
   // brushed satin: very faint horizontal strokes
   const rand = prng(seed);
-  ctx.globalAlpha = 0.02;
+  ctx.globalAlpha = 0.035;
   for (let i = 0; i < 900; i++) {
     const y = rand() * h;
     ctx.strokeStyle = rand() > 0.5 ? '#ffffff' : '#000000';
@@ -93,11 +93,11 @@ function slotRing(ctx) {
   const { cx, y, w, h } = SLOT;
   ctx.save();
   rr(ctx, cx - w / 2 - 10, y - 10, w + 20, h + 20, (h + 20) / 2);
-  ctx.strokeStyle = 'rgba(15, 23, 42, 0.05)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 2;
   ctx.stroke();
   rr(ctx, cx - w / 2, y, w, h, h / 2);
-  ctx.fillStyle = '#f6f8fb';
+  ctx.fillStyle = '#1a140f';
   ctx.fill();
   ctx.restore();
 }
@@ -113,7 +113,7 @@ function mono(ctx, text, x, y, { size = 20, color = C.muted, align = 'left', spa
   ctx.restore();
 }
 
-function corners(ctx, x, y, w, h, len = 22, color = 'rgba(15, 23, 42, 0.495)') {
+function corners(ctx, x, y, w, h, len = 22, color = 'rgba(234,230,227,0.55)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
@@ -138,7 +138,7 @@ function dotMatrix(ctx, x, y, cols, rows, cell, seed) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const on = rand() > 0.42;
-      ctx.fillStyle = on ? 'rgba(15, 23, 42, 0.558)' : 'rgba(15, 23, 42, 0.09)';
+      ctx.fillStyle = on ? 'rgba(234,230,227,0.62)' : 'rgba(234,230,227,0.10)';
       ctx.beginPath();
       ctx.arc(x + c * cell + cell / 2, y + r * cell + cell / 2, cell * 0.28, 0, Math.PI * 2);
       ctx.fill();
@@ -165,7 +165,7 @@ export function drawFront(canvas, photo, { includePhoto = true } = {}) {
   // photo window
   ctx.save();
   rr(ctx, PHOTO.x, PHOTO.y, PHOTO.w, PHOTO.h, PHOTO.r);
-  ctx.fillStyle = '#f4f6fa';
+  ctx.fillStyle = '#1f1812';
   ctx.fill();
   if (includePhoto && photo) {
     ctx.clip();
@@ -174,7 +174,7 @@ export function drawFront(canvas, photo, { includePhoto = true } = {}) {
   ctx.restore();
   ctx.save();
   rr(ctx, PHOTO.x - 1, PHOTO.y - 1, PHOTO.w + 2, PHOTO.h + 2, PHOTO.r + 1);
-  ctx.strokeStyle = 'rgba(15, 23, 42, 0.05)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.restore();
@@ -251,11 +251,11 @@ export function drawPhoto(ctx, photo, x, y, w, h) {
     sy = 0;
   }
   ctx.drawImage(photo, sx, sy, sw, sh, x, y, w, h);
-  // gentle grade to sit the studio backdrop into the light card
+  // gentle grade to sit the bright studio backdrop into the dark card
   const g = ctx.createLinearGradient(0, y, 0, y + h);
-  g.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
-  g.addColorStop(0.45, 'rgba(255, 255, 255, 0)');
-  g.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+  g.addColorStop(0, 'rgba(31,24,18,0.30)');
+  g.addColorStop(0.45, 'rgba(31,24,18,0.0)');
+  g.addColorStop(1, 'rgba(31,24,18,0.42)');
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, h);
   corners(ctx, x + 22, y + 22, w - 44, h - 44);
@@ -268,7 +268,7 @@ export function drawPhoto(ctx, photo, x, y, w, h) {
   const px = x + 46;
   const py = y + h - 52;
   rr(ctx, px - 16, py - 34, lw + 70, 50, 25);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.86)';
+  ctx.fillStyle = 'rgba(31,24,18,0.72)';
   ctx.fill();
   ctx.fillStyle = C.accent;
   ctx.beginPath();
@@ -285,14 +285,14 @@ export function drawBack(canvas) {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  surface(ctx, w, h, '#ffffff', 23);
+  surface(ctx, w, h, '#2a2018', 23);
   // the back is seen mirrored through the slot, so the slot sits at the same place
   slotRing(ctx);
 
   // stripe
-  ctx.fillStyle = '#e8eefc';
+  ctx.fillStyle = '#1b1510';
   ctx.fillRect(0, 170, w, 120);
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.02)';
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
   ctx.fillRect(0, 170, w, 2);
 
   mono(ctx, 'Holder information', 64, 380, { size: 25, color: C.ink2 });
@@ -335,11 +335,11 @@ export function drawBack(canvas) {
   const sy = h - 330;
   ctx.save();
   rr(ctx, 64, sy, w - 128, 120, 12);
-  ctx.fillStyle = '#3f4658';
+  ctx.fillStyle = '#d9d2cd';
   ctx.fill();
   ctx.clip();
   ctx.globalAlpha = 0.18;
-  ctx.strokeStyle = '#7785a5';
+  ctx.strokeStyle = '#857264';
   for (let i = -20; i < 60; i++) {
     ctx.beginPath();
     ctx.moveTo(64 + i * 22, sy);
@@ -347,7 +347,7 @@ export function drawBack(canvas) {
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
-  ctx.fillStyle = '#edf0f7';
+  ctx.fillStyle = '#36291f';
   ctx.font = `italic 72px ${SERIF}`;
   ctx.fillText(profile.name, 96, sy + 86);
   ctx.restore();
