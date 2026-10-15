@@ -142,12 +142,12 @@ function makeStrapTexture(anisotropy) {
   c.width = 1024;
   c.height = 96;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#3b74f0';
+  ctx.fillStyle = '#32271e';
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.fillStyle = '#403730';
   ctx.fillRect(0, 6, c.width, 3);
   ctx.fillRect(0, c.height - 9, c.width, 3);
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#e69864';
   ctx.font = '500 34px "Geist Mono Variable", ui-monospace, monospace';
   ctx.textBaseline = 'middle';
   const label = 'PANKAJ BADUWAL  ·  ';
@@ -357,41 +357,41 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
   return (
     <>
       <ambientLight intensity={0.18} />
-      <directionalLight ref={key} position={[-3, 4, 5]} intensity={0} color="#f4f8ff" />
-      <directionalLight position={[4, 2, -4]} intensity={2.2} color="#a9c8ff" />
+      <directionalLight ref={key} position={[-3, 4, 5]} intensity={0} color="#fff4e8" />
+      <directionalLight position={[4, 2, -4]} intensity={2.2} color="#ffc097" />
       <spotLight ref={sweep} position={[-5, 0.5, 3]} angle={0.12} penumbra={0.6} intensity={0} color="#ffffff" distance={12} />
-      <pointLight ref={glint} position={[0, 0, 2]} intensity={0} distance={6} decay={2} color="#e3eeff" />
+      <pointLight ref={glint} position={[0, 0, 2]} intensity={0} distance={6} decay={2} color="#ffe6d5" />
       <mesh ref={strap} geometry={geos.ribbon} frustumCulled={false}>
-        <meshStandardMaterial map={strapTex} emissiveMap={strapTex} emissive="#ffffff" emissiveIntensity={0.55} roughness={0.78} metalness={0.05} side={THREE.DoubleSide} />
+        <meshStandardMaterial map={strapTex} roughness={0.78} metalness={0.05} side={THREE.DoubleSide} />
       </mesh>
       <group ref={outer}>
         <group ref={inner}>
           <mesh geometry={geos.clamp}>
-            <meshPhysicalMaterial color="#939cb2" metalness={1} roughness={0.28} clearcoat={0.6} />
+            <meshPhysicalMaterial color="#b4a69b" metalness={1} roughness={0.28} clearcoat={0.6} />
           </mesh>
           <mesh geometry={geos.ring} position-y={-CLAMP_H - RING_R} rotation-y={Math.PI / 2}>
-            <meshPhysicalMaterial color="#b4bac9" metalness={1} roughness={0.22} />
+            <meshPhysicalMaterial color="#ccc3bc" metalness={1} roughness={0.22} />
           </mesh>
           <group position-y={CARD_Y}>
             <mesh geometry={geos.body}>
-              <meshPhysicalMaterial color="#e2e8f0" metalness={0.3} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
+              <meshPhysicalMaterial color="#3e2f24" metalness={0.75} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
             </mesh>
             <mesh geometry={geos.face} position-z={faceZ}>
-              <meshPhysicalMaterial map={front} emissiveMap={front} emissive="#ffffff" emissiveIntensity={0.22} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
+              <meshPhysicalMaterial map={front} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
             </mesh>
             <mesh geometry={geos.photoGeo} position-z={faceZ + 0.0035}>
               <meshPhysicalMaterial map={photo} roughness={0.28} metalness={0} clearcoat={1} clearcoatRoughness={0.12} />
             </mesh>
             <mesh geometry={geos.face} position-z={-faceZ} rotation-y={Math.PI}>
-              <meshPhysicalMaterial map={back} emissiveMap={back} emissive="#ffffff" emissiveIntensity={0.22} roughness={0.6} metalness={0.05} clearcoat={0.25} clearcoatRoughness={0.45} />
+              <meshPhysicalMaterial map={back} roughness={0.6} metalness={0.05} clearcoat={0.25} clearcoatRoughness={0.45} />
             </mesh>
           </group>
         </group>
       </group>
-      <ContactShadows position={[0, layout.shadowY, 0]} opacity={0.32} scale={7} blur={2.6} far={3.2} resolution={512} color="#000000" />
+      <ContactShadows position={[0, layout.shadowY, 0]} opacity={0.6} scale={7} blur={2.6} far={3.2} resolution={512} color="#000000" />
       <Environment resolution={128} frames={1}>
         <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[-3, 3, 4]} scale={[4, 1.4, 1]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={1.4} color="#8fb8ff" position={[4, -1, -3]} scale={[1, 5, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={1.4} color="#ffb686" position={[4, -1, -3]} scale={[1, 5, 1]} target={[0, 0, 0]} />
         <Lightformer form="ring" intensity={0.6} color="#ffffff" position={[0, 5, -2]} scale={2} target={[0, 0, 0]} />
       </Environment>
     </>
