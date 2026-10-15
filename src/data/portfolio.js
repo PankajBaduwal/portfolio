@@ -228,6 +228,8 @@ export const projectFilters = [
 ];
 
 export const otherProjects = [
+  { name: 'SuperMarketBillingSystem', lang: 'Java', desc: 'Console billing app with admin and customer logins, product catalogue, cart, payments, coupons and invoices.' },
+  { name: 'LibraryManagementSystem', lang: 'Java', desc: 'Console library app with admin and borrower roles, book search, borrow and return, fines and reports.' },
   { name: 'PersonalManager', lang: 'JavaScript', desc: 'A personal productivity and task management app.' },
   { name: 'Track4', lang: 'TypeScript', desc: 'A TypeScript-based music tracking and discovery application.' },
   { name: 'HandTracking', lang: 'Python', desc: 'Real-time hand tracking and gesture recognition using OpenCV and MediaPipe.' },

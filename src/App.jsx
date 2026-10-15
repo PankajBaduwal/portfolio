@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Cursor from './components/Cursor.jsx';
-import { initPointerFx } from './lib/fx.js';
+import { initPointerFx, initScrollProgress } from './lib/fx.js';
 import About from './components/About.jsx';
 import Achievements from './components/Achievements.jsx';
 import Certifications from './components/Certifications.jsx';
@@ -31,6 +31,7 @@ export default function App() {
   const [curtain] = useState(intro);
 
   useEffect(() => initPointerFx(), []);
+  useEffect(() => initScrollProgress(), []);
 
   useEffect(() => {
     if (!intro) return undefined;
@@ -59,6 +60,7 @@ export default function App() {
           <span className="curtain__mark">PB</span>
         </div>
       )}
+      <div className="scroll-progress" aria-hidden="true" />
       <Cursor />
       <Nav cardThumb={cardThumb} />
       <SectionRail />
