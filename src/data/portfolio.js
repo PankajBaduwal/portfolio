@@ -294,14 +294,15 @@ export const experience = [
 
 // `image` points to the holder's own certificate/badge files (personal data excluded).
 // `verify` is only set where the verification URL appears on the original certificate.
+// `key` marks the certifications shown on the site and résumé; the rest stay listed here for reference.
 export const certifications = [
-  { provider: 'Cisco', title: 'CCNA: Introduction to Networks', issuer: 'Cisco', image: '/img/certs/ccna-itn.webp' },
-  { provider: 'Cisco', title: 'CCNA: Switching, Routing & Wireless Essentials', issuer: 'Cisco', image: '/img/certs/ccna-srwe.webp' },
-  { provider: 'Cisco', title: 'CCNA: Enterprise Networking, Security & Automation', issuer: 'Cisco', image: '/img/certs/ccna-ensa.webp' },
-  { provider: 'Cisco', title: 'Python Essentials 1', issuer: 'Cisco / Python Institute', image: '/img/certs/python-essentials.webp' },
-  { provider: 'AWS', title: 'AWS Academy Cloud Foundations', issuer: 'AWS Academy', image: '/img/certs/aws-cf.webp', verify: 'https://www.credly.com/go/hBFRpZHw' },
-  { provider: 'MongoDB University', title: 'MongoDB for Students', issuer: 'MongoDB University', image: '/img/certs/mongodb-students.webp' },
-  { provider: 'Infosys Springboard', title: 'Data Science', issuer: 'Infosys Springboard', image: '/img/certs/infosys-ds.webp' },
+  { provider: 'Cisco', title: 'CCNA: Introduction to Networks', issuer: 'Cisco', image: '/img/certs/ccna-itn.webp', key: true },
+  { provider: 'Cisco', title: 'CCNA: Switching, Routing & Wireless Essentials', issuer: 'Cisco', image: '/img/certs/ccna-srwe.webp', key: true },
+  { provider: 'Cisco', title: 'CCNA: Enterprise Networking, Security & Automation', issuer: 'Cisco', image: '/img/certs/ccna-ensa.webp', key: true },
+  { provider: 'Cisco', title: 'Python Essentials 1', issuer: 'Cisco / Python Institute', image: '/img/certs/python-essentials.webp', key: true },
+  { provider: 'AWS', title: 'AWS Academy Cloud Foundations', issuer: 'AWS Academy', image: '/img/certs/aws-cf.webp', verify: 'https://www.credly.com/go/hBFRpZHw', key: true },
+  { provider: 'MongoDB University', title: 'MongoDB for Students', issuer: 'MongoDB University', image: '/img/certs/mongodb-students.webp', key: true },
+  { provider: 'Infosys Springboard', title: 'Data Science', issuer: 'Infosys Springboard', image: '/img/certs/infosys-ds.webp', key: true },
   { provider: 'Infosys Springboard', title: 'Agile Scrum', issuer: 'Infosys Springboard', image: '/img/certs/infosys-agile.webp' },
   { provider: 'Infosys Springboard', title: 'Business Intelligence', issuer: 'Infosys Springboard', image: '/img/certs/infosys-bi.webp' },
   { provider: 'Infosys Springboard', title: 'ER Modeling', issuer: 'Infosys Springboard', image: '/img/certs/infosys-er.webp' },
@@ -309,7 +310,7 @@ export const certifications = [
   { provider: 'Infosys Springboard', title: 'Data Visualization', issuer: 'Infosys Springboard' },
   { provider: 'Infosys Springboard', title: 'SQL', issuer: 'Infosys Springboard' },
   { provider: 'Infosys Springboard', title: 'Analytics', issuer: 'Infosys Springboard' },
-  { provider: 'freeCodeCamp', title: 'JavaScript Algorithms and Data Structures', issuer: 'freeCodeCamp', image: '/img/certs/fcc-js.webp' },
+  { provider: 'freeCodeCamp', title: 'JavaScript Algorithms and Data Structures', issuer: 'freeCodeCamp', image: '/img/certs/fcc-js.webp', key: true },
   { provider: 'OpenClassrooms', title: 'Tableau Dashboards', issuer: 'OpenClassrooms' },
   { provider: 'OpenClassrooms', title: 'SQL', issuer: 'OpenClassrooms' },
   { provider: 'Great Learning', title: 'Front End Development — HTML', issuer: 'Great Learning', image: '/img/certs/gl-html.webp' },
@@ -318,6 +319,7 @@ export const certifications = [
 
 // `mark` is the short display marker; it repeats the placement exactly as stated in the title.
 export const achievements = [
+  { title: 'KPRIET International Student Council Hackathon', result: '1st Place', mark: '1st', level: 'College Level · October 2026', kind: 'tech', image: '/img/achievements/kpriet-hackathon.webp', featured: true, short: 'KPRIET Hackathon' },
   { title: 'Intel GenAI National Hackathon', result: 'Top 25 Finalist', mark: 'Top 25', level: 'National Level', kind: 'tech', image: '/img/achievements/intel-genai.webp' },
   { title: 'Science Day Tech Showcase (Solar IoT)', result: '3rd Place', mark: '3rd', level: 'College Level', kind: 'tech', image: '/img/achievements/science-day.webp' },
   { title: 'InnovSense Tech Fest', result: 'Participant', mark: 'Participant', level: 'Tech Festival', kind: 'tech', image: '/img/achievements/innovsense.webp' },

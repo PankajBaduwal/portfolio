@@ -1,14 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { certifications } from '../data/portfolio.js';
-import { Dialog, Reveal, SectionHead } from './Common.jsx';
+import { Dialog, SectionHead } from './Common.jsx';
 import { ArrowUpRight } from './Icons.jsx';
 
-const providers = ['All', ...Array.from(new Set(certifications.map((c) => c.provider)))];
+// Only the certifications that matter most for the roles I'm applying to.
+const list = certifications.filter((c) => c.key);
 
 export default function Certifications() {
-  const [provider, setProvider] = useState('All');
   const [viewing, setViewing] = useState(null);
-  const list = useMemo(() => certifications.filter((c) => provider === 'All' || c.provider === provider), [provider]);
 
   return (
     <section className="section certs" id="certifications" aria-labelledby="certs-title">
@@ -16,19 +15,11 @@ export default function Certifications() {
         <SectionHead
           index="06"
           label="Certifications"
-          title="Certifications &"
-          italic="courses"
-          desc="Industry-recognised certifications that validate my technical expertise."
+          title="Key"
+          italic="certifications"
+          desc="The certifications most relevant to my work in networking, cloud, databases and full-stack development."
           id="certs-title"
         />
-        <Reveal className="filters" role="group" aria-label="Filter certifications by provider">
-          {providers.map((p) => (
-            <button key={p} type="button" className="filter" aria-pressed={provider === p} onClick={() => setProvider(p)}>
-              {p}
-              <span className="filter__count">{p === 'All' ? certifications.length : certifications.filter((c) => c.provider === p).length}</span>
-            </button>
-          ))}
-        </Reveal>
         <ul className="cred-grid">
           {list.map((c) => (
             <li key={`${c.provider}-${c.title}`} className={`cred${c.image ? ' cred--image' : ''}`}>

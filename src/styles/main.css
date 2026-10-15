@@ -731,6 +731,15 @@ main,
   font-size: 15px;
   color: var(--text);
 }
+.meta-list__link {
+  color: var(--text);
+  background: linear-gradient(var(--accent), var(--accent)) 0 100% / 100% 1px no-repeat;
+  padding-bottom: 2px;
+  transition: color 0.2s;
+}
+.meta-list__link:hover {
+  color: var(--accent-2);
+}
 .meta-list__sub {
   display: block;
   font: 400 12px/1.6 var(--mono);
@@ -2468,6 +2477,21 @@ button.cred__mount:focus-visible img {
 .ach:hover .ach__mark {
   -webkit-text-fill-color: var(--text);
   filter: none;
+}
+.ach__latest {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 600 10px/1 var(--mono);
+  letter-spacing: 0.12em;
+  vertical-align: 1px;
+}
+.ach--featured .ach__mark {
+  background-image: linear-gradient(105deg, var(--accent) 42%, #ffe3cf 50%, var(--accent) 58%);
+  background-color: var(--accent);
 }
 .ach__result {
   font: 500 12px/1 var(--mono);
