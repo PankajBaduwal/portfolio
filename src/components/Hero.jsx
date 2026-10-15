@@ -1,8 +1,10 @@
 import { Component, Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { profile } from '../data/portfolio.js';
+import { achievements, profile } from '../data/portfolio.js';
 import { PHOTO, TEX, drawBack, drawFront, drawPhoto, loadCardFonts, loadImage } from '../lib/cardFace.js';
 import { hasWebGL, usePrefersReducedMotion } from '../lib/hooks.js';
 import { ArrowDown, Download, Mail } from './Icons.jsx';
+
+const latestWin = achievements.find((a) => a.featured);
 
 const IdCardCanvas = lazy(() => import('../three/IdCardCanvas.jsx'));
 
@@ -357,6 +359,17 @@ export default function Hero({ introActive, onSkipIntro, onCardFace }) {
                 <span className="meta-list__sub">2023 – 2027 · Honors in AI &amp; ML</span>
               </dd>
             </div>
+            {latestWin && (
+              <div>
+                <dt>Latest win</dt>
+                <dd>
+                  <a className="meta-list__link" href="#achievements">
+                    {latestWin.result}, {latestWin.short}
+                  </a>
+                  <span className="meta-list__sub">{latestWin.level.split(' · ').pop()}</span>
+                </dd>
+              </div>
+            )}
             <div>
               <dt>Focus</dt>
               <dd>MERN · LangChain · LLMs · RAG</dd>
