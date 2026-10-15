@@ -67,11 +67,11 @@ export default function App() {
         <About />
         <Education />
         <Skills />
+        <Services />
         <Projects />
         <Experience />
         <Certifications />
         <Achievements />
-        <Services />
         <Contact />
       </main>
       <Footer />

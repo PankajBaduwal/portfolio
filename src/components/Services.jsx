@@ -26,7 +26,7 @@ export default function Services() {
     <section className="section services" id="services" aria-labelledby="services-title">
       <div className="container">
         <SectionHead
-          index="08"
+          index="04"
           label="Services"
           title="Services I"
           italic="offer"

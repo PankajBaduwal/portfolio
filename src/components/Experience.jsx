@@ -20,7 +20,7 @@ export default function Experience() {
   return (
     <section className="section experience" id="experience" aria-labelledby="exp-title">
       <div className="container">
-        <SectionHead index="05" label="Experience" title="Professional" italic="experience" desc="My professional journey in technology and software development." id="exp-title" />
+        <SectionHead index="06" label="Experience" title="Professional" italic="experience" desc="My professional journey in technology and software development." id="exp-title" />
         <ol className="journey" ref={ref}>
           <span className="journey__spine" aria-hidden="true">
             <span className="journey__fill" />
