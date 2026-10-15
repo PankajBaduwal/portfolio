@@ -5,11 +5,11 @@ const chapters = [
   { id: 'about', label: 'About' },
   { id: 'education', label: 'Education' },
   { id: 'skills', label: 'Skills' },
+  { id: 'services', label: 'Services' },
   { id: 'projects', label: 'Projects' },
   { id: 'experience', label: 'Experience' },
   { id: 'certifications', label: 'Certifications' },
   { id: 'achievements', label: 'Achievements' },
-  { id: 'services', label: 'Services' },
   { id: 'contact', label: 'Contact' },
 ];
 
