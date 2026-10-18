@@ -2,10 +2,12 @@ import { Fragment, useEffect, useRef } from 'react';
 import { useInView } from '../lib/hooks.js';
 import { Close } from './Icons.jsx';
 
-export function Reveal({ as: Tag = 'div', className = '', delay = 0, style, children, ...rest }) {
+// variant: 'up' (default), 'left', 'right', 'scale', 'blur' or 'fade'; plays once, the first time it enters view.
+export function Reveal({ as: Tag = 'div', className = '', delay = 0, variant = 'up', style, children, ...rest }) {
   const [ref, inView] = useInView();
+  const v = variant === 'up' ? '' : ` reveal--${variant}`;
   return (
-    <Tag ref={ref} className={`reveal${inView ? ' is-in' : ''} ${className}`} style={{ ...style, '--rd': `${delay}ms` }} {...rest}>
+    <Tag ref={ref} className={`reveal${v}${inView ? ' is-in' : ''} ${className}`} style={{ ...style, '--rd': `${delay}ms` }} {...rest}>
       {children}
     </Tag>
   );

@@ -35,6 +35,8 @@ export default function Hero({ introActive, onSkipIntro, onCardFace }) {
   const [sceneReady, setSceneReady] = useState(false);
   const [active, setActive] = useState(true);
   const [flipped, setFlipped] = useState(false);
+  // repeat visits skip the curtain but still get a quick staggered entrance
+  const [enter] = useState(() => !introActive && typeof window !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const sectionRef = useRef(null);
   const stageRef = useRef(null);
   const cssCardRef = useRef(null);
@@ -267,7 +269,7 @@ export default function Hero({ introActive, onSkipIntro, onCardFace }) {
   const cssVisible = !sceneReady;
 
   return (
-    <section className={`hero${introActive ? ' is-intro' : ''}`} id="home" ref={sectionRef} aria-labelledby="hero-title">
+    <section className={`hero${introActive ? ' is-intro' : ''}${enter ? ' is-enter' : ''}`} id="home" ref={sectionRef} aria-labelledby="hero-title">
       <div className="hero__grid container">
         <div className="hero__lead">
           <p className="eyebrow hero__in" style={{ '--d': '0.55s' }}>

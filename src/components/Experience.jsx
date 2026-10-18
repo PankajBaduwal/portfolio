@@ -27,7 +27,7 @@ export default function Experience() {
           </span>
           <span className="journey__spark" aria-hidden="true" />
           {experience.map((x, i) => (
-            <Reveal as="li" key={x.org} className="journey__item" delay={i * 60} style={{ '--i': i }}>
+            <Reveal as="li" key={x.org} className="journey__item" delay={i * 90} variant={i % 2 ? 'right' : 'left'} style={{ '--i': i }}>
               <span className="journey__node" aria-hidden="true" />
               <div className="journey__plate">
                 <p className="journey__period">{x.period}</p>

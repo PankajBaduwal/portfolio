@@ -1,5 +1,5 @@
 import { certifications } from '../data/portfolio.js';
-import { SectionHead } from './Common.jsx';
+import { Reveal, SectionHead } from './Common.jsx';
 import { ArrowUpRight } from './Icons.jsx';
 
 // Only the certifications that matter most for the roles I'm applying to.
@@ -19,7 +19,7 @@ export default function Certifications() {
         />
         <ul className="cred-grid">
           {list.map((c, i) => (
-            <li key={`${c.provider}-${c.title}`} className="cred">
+            <Reveal as="li" key={`${c.provider}-${c.title}`} className="cred" delay={(i % 4) * 90}>
               <div className="cred__top">
                 <span className="cred__num">{String(i + 1).padStart(2, '0')}</span>
                 <span className="cred__provider">{c.provider}</span>
@@ -33,7 +33,7 @@ export default function Certifications() {
                   </a>
                 )}
               </div>
-            </li>
+            </Reveal>
           ))}
         </ul>
       </div>

@@ -18,8 +18,8 @@ export default function Achievements() {
               {achievements
                 .filter((a) => a.kind === g.id)
                 .map((a, i) => (
-                  <Reveal as="li" key={a.title} className={`ach${a.featured ? ' ach--featured' : ''}`} delay={i * 60}>
-                    <span className={`ach__mark${a.mark.length > 4 ? ' ach__mark--long' : ''}`} aria-hidden="true">
+                  <Reveal as="li" key={a.title} className={`ach${a.featured ? ' ach--featured' : ''}`} delay={i * 90} variant="left">
+                    <span className={`ach__mark${a.mark.length > 4 ? ' ach__mark--long' : ''}`} aria-hidden="true" data-parallax="0.05">
                       {a.mark}
                     </span>
                     <div className="ach__text">

@@ -6,7 +6,7 @@ import { serviceIcons } from './Icons.jsx';
 function Service({ s, i }) {
   const tilt = useTilt(10);
   return (
-    <Reveal as="li" className="service" delay={(i % 3) * 70}>
+    <Reveal as="li" className="service" delay={(i % 3) * 110} variant="blur">
       <div className="service__tile" ref={tilt}>
         <svg className="service__glyph" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           {serviceIcons[s.id]}

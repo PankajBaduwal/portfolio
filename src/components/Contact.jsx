@@ -108,7 +108,7 @@ export default function Contact() {
     <section className="section contact" id="contact" aria-labelledby="contact-title">
       <div className="container">
         <SectionHead index="09" label="Contact" title="Let’s" italic="work together" desc="Have a project in mind? I’d love to hear about it. Send me a message and let’s talk." id="contact-title" />
-        <Reveal className="terminal">
+        <Reveal className="terminal" variant="scale">
           <div className="terminal__info">
             <p className="terminal__label">Holder information</p>
             <ul className="terminal__rows">

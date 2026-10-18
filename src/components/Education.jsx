@@ -33,7 +33,7 @@ export default function Education() {
         <SectionHead index="02" label="Education" title="Academic" italic="background" desc="A strong academic foundation in Information Technology and AI/ML." id="edu-title" />
 
         {/* Spatial rail (tablet & desktop) */}
-        <Reveal className="rail" aria-label="Education timeline">
+        <Reveal className="rail" variant="blur" aria-label="Education timeline">
           <div className="rail__plane">
             <div className="rail__track">
               {years.map((y) => (

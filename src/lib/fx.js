@@ -71,3 +71,41 @@ export function initScrollProgress() {
     window.removeEventListener('resize', onScroll);
   };
 }
+
+// Gentle parallax for decorative pieces marked data-parallax="speed". Only elements on screen are
+// updated, once per frame, through the `translate` property so existing transforms stay intact.
+// Skipped on touch screens, narrow layouts and when reduced motion is preferred.
+export function initParallax() {
+  const ok = window.matchMedia('(hover: hover) and (min-width: 900px) and (prefers-reduced-motion: no-preference)').matches;
+  const els = [...document.querySelectorAll('[data-parallax]')];
+  if (!ok || !els.length || !('IntersectionObserver' in window)) return () => {};
+  const visible = new Set();
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => (e.isIntersecting ? visible.add(e.target) : visible.delete(e.target))),
+    { rootMargin: '10% 0px' },
+  );
+  els.forEach((el) => io.observe(el));
+  let raf = 0;
+  const update = () => {
+    raf = 0;
+    const mid = window.innerHeight / 2;
+    visible.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const offset = (r.top + r.height / 2 - mid) * parseFloat(el.dataset.parallax || 0);
+      el.style.translate = `0 ${Math.max(-40, Math.min(40, offset)).toFixed(1)}px`;
+    });
+  };
+  const onScroll = () => {
+    if (!raf) raf = requestAnimationFrame(update);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll();
+  return () => {
+    io.disconnect();
+    cancelAnimationFrame(raf);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('resize', onScroll);
+    els.forEach((el) => (el.style.translate = ''));
+  };
+}
