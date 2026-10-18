@@ -8,6 +8,7 @@ export default function About() {
     <section className="section about" id="about" aria-labelledby="about-title">
       <div className="container about__grid">
         <div className="about__stage" ref={stageRef} aria-hidden="false">
+          <Reveal className="about__layers-wrap" variant="scale">
           <div className="about__layers">
             <div className="about__plate about__plate--back" aria-hidden="true">
               <span>Holder</span>
@@ -17,29 +18,32 @@ export default function About() {
               <source srcSet={profile.photo.portrait} type="image/webp" />
               <img src={profile.photo.portraitJpg} alt="Portrait of Pankaj Baduwal in a dark blazer" width="900" height="1170" loading="lazy" decoding="async" />
             </picture>
-            <div className="about__tag" aria-hidden="true">
+            <div className="about__tag" aria-hidden="true" data-parallax="0.06">
               <span className="about__tag-k">Spec</span>
               <span>B.Tech IT · 2023 – 2027</span>
               <span>Honors · AI &amp; ML</span>
             </div>
-            <div className="about__tag about__tag--b" aria-hidden="true">
+            <div className="about__tag about__tag--b" aria-hidden="true" data-parallax="-0.05">
               <span className="about__tag-k">Loc</span>
               <span>{profile.coords}</span>
             </div>
           </div>
+          </Reveal>
         </div>
         <div className="about__copy">
           <SectionHead index="01" label="About" title={about.heading[0]} italic={about.heading[1]} id="about-title" />
           <div className="about__body">
             {about.paragraphs.map((p, i) => (
-              <Reveal as="p" key={i} delay={i * 80}>
+              <Reveal as="p" key={i} delay={i * 100} variant="right">
                 {p}
               </Reveal>
             ))}
           </div>
-          <Reveal as="ul" className="spec-list" delay={240} aria-label="Highlights">
-            {about.badges.map((b) => (
-              <li key={b}>{b}</li>
+          <Reveal as="ul" className="spec-list" delay={240} variant="fade" aria-label="Highlights">
+            {about.badges.map((b, i) => (
+              <li key={b} style={{ '--li': i }}>
+                {b}
+              </li>
             ))}
           </Reveal>
         </div>

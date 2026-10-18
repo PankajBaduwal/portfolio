@@ -5,13 +5,13 @@ import { Dialog, Reveal, SectionHead } from './Common.jsx';
 import { ArrowUpRight, Github } from './Icons.jsx';
 import ProjectCover from './ProjectCover.jsx';
 
-function ProjectCard({ p, index, onOpen }) {
+function ProjectCard({ p, index, order, onOpen }) {
   const tilt = useTilt(7);
   // touch screens have no hover, so covers play while they sit mid-screen
   const [liveRef, centred] = useInView({ rootMargin: '-30% 0px -30% 0px', threshold: 0 }, false);
   const noHover = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
   return (
-    <li className="project" ref={tilt}>
+    <li className="project" ref={tilt} style={{ '--i': order }}>
       <div className="project__body" ref={liveRef}>
         <ProjectCover motif={p.motif} label={p.title} live={noHover && centred} />
         <div className="project__meta">
@@ -81,6 +81,7 @@ export default function Projects() {
     if (preview.repo) setLastRepo(preview.repo);
   }, [preview.repo]);
   const [filter, setFilter] = useState('all');
+  const [gridRef, gridIn] = useInView({ rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
   const [openId, setOpenId] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const archive = showAll ? otherProjects : otherProjects.slice(0, 10);
@@ -108,13 +109,13 @@ export default function Projects() {
         <p className="sr-only" aria-live="polite">
           {list.length} projects shown.
         </p>
-        <ul className="project-grid">
-          {list.map((p) => (
-            <ProjectCard key={p.id} p={p} index={featuredProjects.indexOf(p)} onOpen={setOpenId} />
+        <ul className={`project-grid${gridIn ? ' is-in' : ''}`} ref={gridRef}>
+          {list.map((p, i) => (
+            <ProjectCard key={`${filter}-${p.id}`} p={p} index={featuredProjects.indexOf(p)} order={i % 3} onOpen={setOpenId} />
           ))}
         </ul>
 
-        <Reveal className="archive" aria-labelledby="archive-title">
+        <Reveal className="archive" variant="blur" aria-labelledby="archive-title">
           <div className="archive__head">
             <h3 id="archive-title">
               Other projects <span>{otherProjects.length} repositories</span>

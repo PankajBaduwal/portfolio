@@ -61,7 +61,7 @@ export default function Skills() {
           ))}
         </Reveal>
 
-        <Reveal className="keyboard" delay={100}>
+        <Reveal className="keyboard" delay={100} variant="scale">
           <div className={`keyboard__deck${wave ? ' is-wave' : ''}`} ref={deckRef}>
             {skillCategories.map((c) => {
               const lit = filter === 'all' || filter === c.id;

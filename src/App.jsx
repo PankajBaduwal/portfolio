@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Cursor from './components/Cursor.jsx';
-import { initPointerFx, initScrollProgress } from './lib/fx.js';
+import { initParallax, initPointerFx, initScrollProgress } from './lib/fx.js';
 import About from './components/About.jsx';
 import Achievements from './components/Achievements.jsx';
 import Certifications from './components/Certifications.jsx';
@@ -32,6 +32,7 @@ export default function App() {
 
   useEffect(() => initPointerFx(), []);
   useEffect(() => initScrollProgress(), []);
+  useEffect(() => initParallax(), []);
 
   useEffect(() => {
     if (!intro) return undefined;
