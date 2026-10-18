@@ -47,7 +47,7 @@ The form validates input, then sends through one of these, configured in Vercel 
 - `VITE_WEB3FORMS_KEY` — free key from https://web3forms.com (recommended), or
 - `VITE_CONTACT_ENDPOINT` — any JSON endpoint such as Formspree (`https://formspree.io/f/xxxx`).
 
-With neither set, submitting opens the visitor's email app with the message pre-filled; it never shows a fake "sent" message.
+With neither set, messages go through [FormSubmit](https://formsubmit.co) to the address in `profile.email`. The first message sends an activation email to that inbox; click Activate once and every later message arrives as an email you can reply to directly. The form shows "sent" only when delivery succeeds.
 See `.env.example`. Redeploy after adding a variable.
 
 ## Deploy

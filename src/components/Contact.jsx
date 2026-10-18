@@ -15,9 +15,27 @@ function validate(v) {
   return e;
 }
 
-const mode = site.web3formsKey ? 'web3forms' : site.contactEndpoint ? 'endpoint' : 'mailto';
+// Web3Forms or a custom endpoint when one is configured; otherwise FormSubmit relays the
+// message to the inbox in profile.email with no key needed (it asks once, by email, to activate).
+const mode = site.web3formsKey ? 'web3forms' : site.contactEndpoint ? 'endpoint' : 'formsubmit';
 
 async function send(values) {
+  if (mode === 'formsubmit') {
+    const res = await fetch(`https://formsubmit.co/ajax/${profile.email}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        ...values,
+        _subject: `Portfolio: ${values.subject}`,
+        _replyto: values.email,
+        _template: 'table',
+        _captcha: 'false',
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || String(data.success) !== 'true') throw new Error('The message could not be sent.');
+    return;
+  }
   if (mode === 'web3forms') {
     const res = await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
@@ -60,15 +78,6 @@ export default function Contact() {
       return;
     }
     const payload = { name: values.name.trim(), email: values.email.trim(), subject: values.subject.trim(), message: values.message.trim() };
-    if (mode === 'mailto') {
-      const body = `${payload.message}\n\n— ${payload.name} (${payload.email})`;
-      window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(payload.subject)}&body=${encodeURIComponent(body)}`;
-      setStatus({
-        state: 'info',
-        msg: `Your email app should open with this message ready to send. If nothing opened, write to ${profile.email}.`,
-      });
-      return;
-    }
     setStatus({ state: 'sending', msg: 'Sending…' });
     try {
       await send(payload);
@@ -159,7 +168,7 @@ export default function Contact() {
             </div>
             <div className="terminal__submit">
               <button type="submit" className="btn btn--primary btn--press" disabled={status.state === 'sending'}>
-                {status.state === 'sending' ? 'Sending…' : mode === 'mailto' ? 'Compose email' : 'Send message'}
+                {status.state === 'sending' ? 'Sending…' : 'Send message'}
               </button>
               <a className="btn btn--link" href={`mailto:${profile.email}`}>
                 Or email directly
