@@ -29,7 +29,7 @@ function ProjectCard({ p, index, order, onOpen }) {
           ))}
         </ul>
         <div className="project__actions">
-          <button type="button" className="btn btn--small btn--primary" onClick={() => onOpen(p.id)} aria-haspopup="dialog">
+          <button type="button" className="btn btn--small btn--primary" onClick={(e) => onOpen(p.id, e.currentTarget.closest('.project'))} aria-haspopup="dialog">
             View details
           </button>
           <a className="btn btn--small btn--ghost" href={p.github} target="_blank" rel="noopener noreferrer" aria-label={`${p.title} on GitHub (opens in a new tab)`}>
@@ -87,6 +87,20 @@ export default function Projects() {
   const archive = showAll ? otherProjects : otherProjects.slice(0, 10);
   const list = useMemo(() => featuredProjects.filter((p) => filter === 'all' || p.category === filter), [filter]);
   const open = featuredProjects.find((p) => p.id === openId);
+  // where the clicked card sits, so the details dialog can grow out of it
+  const [origin, setOrigin] = useState(null);
+  const openProject = (id, card) => {
+    if (card) {
+      const r = card.getBoundingClientRect();
+      const w = Math.min(760, window.innerWidth - 24);
+      setOrigin({
+        '--fx': `${Math.round(r.left + r.width / 2 - window.innerWidth / 2)}px`,
+        '--fy': `${Math.round(r.top + r.height / 2 - window.innerHeight / 2)}px`,
+        '--fs': Math.min(1, r.width / w).toFixed(3),
+      });
+    }
+    setOpenId(id);
+  };
 
   return (
     <section className="section projects" id="projects" aria-labelledby="projects-title">
@@ -111,7 +125,7 @@ export default function Projects() {
         </p>
         <ul className={`project-grid${gridIn ? ' is-in' : ''}`} ref={gridRef}>
           {list.map((p, i) => (
-            <ProjectCard key={`${filter}-${p.id}`} p={p} index={featuredProjects.indexOf(p)} order={i % 3} onOpen={setOpenId} />
+            <ProjectCard key={`${filter}-${p.id}`} p={p} index={featuredProjects.indexOf(p)} order={i % 3} onOpen={openProject} />
           ))}
         </ul>
 
@@ -160,7 +174,7 @@ export default function Projects() {
         </Reveal>
       </div>
 
-      <Dialog open={!!open} onClose={() => setOpenId(null)} labelledBy="project-dialog-title" className="dialog--project">
+      <Dialog open={!!open} onClose={() => setOpenId(null)} labelledBy="project-dialog-title" className="dialog--project" style={origin || undefined}>
         {open && (
           <article className="pdetail">
             <ProjectCover motif={open.motif} label={open.title} />

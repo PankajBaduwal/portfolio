@@ -62,6 +62,12 @@ export default function App() {
         </div>
       )}
       <div className="scroll-progress" aria-hidden="true" />
+      <div className="ambient" aria-hidden="true">
+        <span className="ambient__orb ambient__orb--a" />
+        <span className="ambient__orb ambient__orb--b" />
+        <span className="ambient__shape ambient__shape--a" />
+        <span className="ambient__shape ambient__shape--b" />
+      </div>
       <Cursor />
       <Nav cardThumb={cardThumb} />
       <SectionRail />
