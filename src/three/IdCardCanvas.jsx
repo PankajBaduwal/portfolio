@@ -142,12 +142,12 @@ function makeStrapTexture(anisotropy) {
   c.width = 1024;
   c.height = 96;
   const ctx = c.getContext('2d');
-  ctx.fillStyle = '#1a2030';
+  ctx.fillStyle = '#1f2b23';
   ctx.fillRect(0, 0, c.width, c.height);
-  ctx.fillStyle = '#242d43';
+  ctx.fillStyle = '#2b3c31';
   ctx.fillRect(0, 6, c.width, 3);
   ctx.fillRect(0, c.height - 9, c.width, 3);
-  ctx.fillStyle = '#3b82f6';
+  ctx.fillStyle = '#10b981';
   ctx.font = '500 34px "Geist Mono Variable", ui-monospace, monospace';
   ctx.textBaseline = 'middle';
   const label = 'PANKAJ BADUWAL  ·  ';
@@ -357,7 +357,7 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop, lowPower }) {
     }
 
     // light sweep reveal: a narrow light crossing the card once
-    // after the intro, the same narrow light crosses again in cyan as the hero scrolls away
+    // after the intro, the same narrow light crosses again in mint as the hero scrolls away
     if (sweep.current) {
       if (p < 1) {
         sweep.current.position.x = THREE.MathUtils.lerp(-5, 5, p);
@@ -367,7 +367,7 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop, lowPower }) {
         const k = Math.min(1, raw * 1.6);
         sweep.current.position.x = THREE.MathUtils.lerp(-5, 5, k);
         sweep.current.intensity = Math.sin(k * Math.PI) * 26;
-        sweep.current.color.set('#00d4ff');
+        sweep.current.color.set('#6ee7b7');
       }
     }
     if (key.current) key.current.intensity = 2.3 * e;
@@ -381,26 +381,26 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop, lowPower }) {
   return (
     <>
       <ambientLight intensity={0.18} />
-      <directionalLight ref={key} position={[-3, 4, 5]} intensity={0} color="#f1f5ff" />
-      {/* blue and cyan rims catch the card's edges from behind */}
-      <directionalLight position={[4, 2, -4]} intensity={2.4} color="#3b82f6" />
-      <directionalLight position={[-4, -1, -3]} intensity={1.1} color="#00d4ff" />
+      <directionalLight ref={key} position={[-3, 4, 5]} intensity={0} color="#f2fff7" />
+      {/* emerald and mint rims catch the card's edges from behind */}
+      <directionalLight position={[4, 2, -4]} intensity={2.4} color="#10b981" />
+      <directionalLight position={[-4, -1, -3]} intensity={1.1} color="#6ee7b7" />
       <spotLight ref={sweep} position={[-5, 0.5, 3]} angle={0.12} penumbra={0.6} intensity={0} color="#ffffff" distance={12} />
-      <pointLight ref={glint} position={[0, 0, 2]} intensity={0} distance={6} decay={2} color="#bfe9ff" />
+      <pointLight ref={glint} position={[0, 0, 2]} intensity={0} distance={6} decay={2} color="#c6f6dc" />
       <mesh ref={strap} geometry={geos.ribbon} frustumCulled={false}>
         <meshStandardMaterial map={strapTex} roughness={0.78} metalness={0.05} side={THREE.DoubleSide} />
       </mesh>
       <group ref={outer}>
         <group ref={inner}>
           <mesh geometry={geos.clamp}>
-            <meshPhysicalMaterial color="#a5b0c2" metalness={1} roughness={0.28} clearcoat={0.6} />
+            <meshPhysicalMaterial color="#a9b8ae" metalness={1} roughness={0.28} clearcoat={0.6} />
           </mesh>
           <mesh geometry={geos.ring} position-y={-CLAMP_H - RING_R} rotation-y={Math.PI / 2}>
-            <meshPhysicalMaterial color="#c3cad6" metalness={1} roughness={0.22} />
+            <meshPhysicalMaterial color="#c5cfc8" metalness={1} roughness={0.22} />
           </mesh>
           <group position-y={CARD_Y}>
             <mesh geometry={geos.body}>
-              <meshPhysicalMaterial color="#121a2b" metalness={0.75} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
+              <meshPhysicalMaterial color="#121914" metalness={0.75} roughness={0.32} clearcoat={0.4} clearcoatRoughness={0.3} />
             </mesh>
             <mesh geometry={geos.face} position-z={faceZ}>
               <meshPhysicalMaterial map={front} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
@@ -414,10 +414,10 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop, lowPower }) {
           </group>
         </group>
       </group>
-      <ContactShadows position={[0, layout.shadowY, 0]} opacity={0.6} scale={7} blur={2.6} far={3.2} resolution={512} color="#000000" />
+      <ContactShadows position={[0, layout.shadowY, 0]} opacity={0.6} scale={7} blur={2.6} far={3.2} resolution={512} color="#02160d" />
       <Environment resolution={128} frames={1}>
         <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[-3, 3, 4]} scale={[4, 1.4, 1]} target={[0, 0, 0]} />
-        <Lightformer form="rect" intensity={1.4} color="#00d4ff" position={[4, -1, -3]} scale={[1, 5, 1]} target={[0, 0, 0]} />
+        <Lightformer form="rect" intensity={1.4} color="#10b981" position={[4, -1, -3]} scale={[1, 5, 1]} target={[0, 0, 0]} />
         <Lightformer form="ring" intensity={0.6} color="#ffffff" position={[0, 5, -2]} scale={2} target={[0, 0, 0]} />
       </Environment>
     </>
