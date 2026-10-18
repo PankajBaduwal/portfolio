@@ -324,32 +324,44 @@ main,
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translate3d(0, 22px, 0);
+    transform: translate3d(0, 64px, 0) scale(0.97);
+    filter: blur(6px);
+  }
+  60% {
+    filter: blur(0);
   }
 }
 @keyframes reveal-left {
   from {
     opacity: 0;
-    transform: translate3d(-36px, 0, 0);
+    transform: translate3d(-90px, 0, 0) rotate(-1.5deg);
+    filter: blur(6px);
+  }
+  60% {
+    filter: blur(0);
   }
 }
 @keyframes reveal-right {
   from {
     opacity: 0;
-    transform: translate3d(36px, 0, 0);
+    transform: translate3d(90px, 0, 0) rotate(1.5deg);
+    filter: blur(6px);
+  }
+  60% {
+    filter: blur(0);
   }
 }
 @keyframes reveal-scale {
   from {
     opacity: 0;
-    transform: scale(0.94);
+    transform: perspective(1200px) scale(0.82) rotateX(14deg);
   }
 }
 @keyframes reveal-blur {
   from {
     opacity: 0;
-    filter: blur(10px);
-    transform: translate3d(0, 14px, 0);
+    filter: blur(18px);
+    transform: translate3d(0, 40px, 0) scale(0.96);
   }
 }
 @keyframes reveal-fade {
@@ -358,24 +370,30 @@ main,
   }
 }
 @media (max-width: 760px) {
-  /* smaller travel on phones, and a lighter blur */
+  /* shorter travel on phones so nothing pokes past the screen edge */
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 44px, 0) scale(0.97);
+    }
+  }
   @keyframes reveal-left {
     from {
       opacity: 0;
-      transform: translate3d(-16px, 0, 0);
+      transform: translate3d(-32px, 0, 0);
     }
   }
   @keyframes reveal-right {
     from {
       opacity: 0;
-      transform: translate3d(16px, 0, 0);
+      transform: translate3d(32px, 0, 0);
     }
   }
   @keyframes reveal-blur {
     from {
       opacity: 0;
-      filter: blur(4px);
-      transform: translate3d(0, 12px, 0);
+      filter: blur(8px);
+      transform: translate3d(0, 30px, 0);
     }
   }
 }
@@ -1165,6 +1183,8 @@ main,
 .section {
   position: relative;
   padding: clamp(88px, 12vw, 160px) 0;
+  /* reveals and the depth tilt travel sideways; keep them from widening the page */
+  overflow-x: clip;
 }
 .section + .section {
   border-top: 1px solid var(--line);
@@ -3070,9 +3090,10 @@ button.cred__mount:focus-visible img {
   position: fixed;
   inset: 0 0 auto;
   z-index: 60;
-  height: 2px;
+  height: 3px;
   pointer-events: none;
   background: linear-gradient(90deg, var(--accent), var(--teal));
+  box-shadow: 0 0 12px rgba(240, 138, 75, 0.7);
   transform-origin: 0 50%;
   transform: scaleX(var(--progress, 0));
   box-shadow: 0 0 12px rgba(240, 138, 75, 0.6);
@@ -3243,12 +3264,12 @@ button.cred__mount:focus-visible img {
   opacity: 0;
 }
 .project-grid.is-in .project {
-  animation: card-rise 0.75s var(--ease) calc(var(--i, 0) * 110ms) backwards;
+  animation: card-rise 0.9s var(--ease) calc(var(--i, 0) * 140ms) backwards;
 }
 @keyframes card-rise {
   from {
     opacity: 0;
-    transform: translateY(28px) scale(0.96);
+    transform: perspective(1000px) translateY(80px) rotateX(18deg) scale(0.92);
   }
 }
 .project-grid.is-in .project__body > :not(.cover) {
@@ -3278,6 +3299,52 @@ button.cred__mount:focus-visible img {
   animation: reveal-up 0.6s var(--ease) calc(var(--rd, 0ms) + var(--li, 0) * 80ms) backwards;
 }
 
+/* scroll-linked depth: each section rises out of the page as it scrolls in, and the
+   section title grows into place. Only in browsers with scroll timelines. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section > .container {
+      animation: section-depth linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70vh;
+    }
+    .section-head__title {
+      transform-origin: 0 100%;
+      animation: title-grow linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+    .project .cover__layer {
+      animation: cover-drift linear both;
+      animation-timeline: view();
+      animation-range: cover;
+    }
+  }
+}
+@keyframes section-depth {
+  from {
+    transform: perspective(1600px) translateY(90px) rotateX(6deg) scale(0.94);
+  }
+}
+@keyframes title-grow {
+  from {
+    transform: scale(0.86);
+    opacity: 0.25;
+  }
+}
+/* the artwork's layers drift at different depths while the card crosses the screen */
+.cover__layer--0 { --drift: 4px; }
+.cover__layer--1 { --drift: 10px; }
+.cover__layer--2 { --drift: 18px; }
+@keyframes cover-drift {
+  from {
+    translate: 0 calc(var(--drift, 8px) * -1);
+  }
+  to {
+    translate: 0 var(--drift, 8px);
+  }
+}
+
 /* =========================================================================
    Reduced motion: everything stays, nothing travels.
    ========================================================================= */
@@ -3292,9 +3359,13 @@ button.cred__mount:focus-visible img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
-  .reveal,
-  .project-grid .project {
-    opacity: 1 !important;
+  /* no travel, but content still fades in so the page doesn't feel static */
+  .reveal.is-in,
+  .project-grid.is-in .project,
+  .spec-list.is-in li {
+    animation: reveal-fade 0.6s ease var(--rd, 0ms) backwards !important;
+  }
+  .project-grid.is-in .project__body > :not(.cover) {
     animation: none !important;
   }
   .mask__in,
