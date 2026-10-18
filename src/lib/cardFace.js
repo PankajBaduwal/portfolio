@@ -10,13 +10,13 @@ export const SLOT = { cx: TEX.w / 2, y: 64, w: 176, h: 38 };
 export const PHOTO = { x: 64, y: 196, w: 896, h: 780, r: 26 };
 
 const C = {
-  base: '#2e231b',
-  baseHi: '#392b21',
-  ink: '#eae6e3',
-  ink2: '#beb2a9',
-  muted: '#978476',
-  line: 'rgba(234,230,227,0.14)',
-  accent: '#f08a4b',
+  base: '#121a2b',
+  baseHi: '#17213a',
+  ink: '#e2e8f0',
+  ink2: '#b4bfcf',
+  muted: '#8b9bb4',
+  line: 'rgba(148,163,184,0.14)',
+  accent: '#3b82f6',
 };
 
 const SERIF = '"Instrument Serif", Georgia, serif';
@@ -70,7 +70,7 @@ function surface(ctx, w, h, tone = C.base, seed = 7) {
   const g = ctx.createLinearGradient(0, 0, w, h);
   g.addColorStop(0, C.baseHi);
   g.addColorStop(0.55, tone);
-  g.addColorStop(1, '#271e17');
+  g.addColorStop(1, '#141925');
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
   // brushed satin: very faint horizontal strokes
@@ -97,7 +97,7 @@ function slotRing(ctx) {
   ctx.lineWidth = 2;
   ctx.stroke();
   rr(ctx, cx - w / 2, y, w, h, h / 2);
-  ctx.fillStyle = '#1a140f';
+  ctx.fillStyle = '#0d1119';
   ctx.fill();
   ctx.restore();
 }
@@ -113,7 +113,7 @@ function mono(ctx, text, x, y, { size = 20, color = C.muted, align = 'left', spa
   ctx.restore();
 }
 
-function corners(ctx, x, y, w, h, len = 22, color = 'rgba(234,230,227,0.55)') {
+function corners(ctx, x, y, w, h, len = 22, color = 'rgba(148,163,184,0.55)') {
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
@@ -138,7 +138,7 @@ function dotMatrix(ctx, x, y, cols, rows, cell, seed) {
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const on = rand() > 0.42;
-      ctx.fillStyle = on ? 'rgba(234,230,227,0.62)' : 'rgba(234,230,227,0.10)';
+      ctx.fillStyle = on ? 'rgba(148,163,184,0.62)' : 'rgba(148,163,184,0.10)';
       ctx.beginPath();
       ctx.arc(x + c * cell + cell / 2, y + r * cell + cell / 2, cell * 0.28, 0, Math.PI * 2);
       ctx.fill();
@@ -165,7 +165,7 @@ export function drawFront(canvas, photo, { includePhoto = true } = {}) {
   // photo window
   ctx.save();
   rr(ctx, PHOTO.x, PHOTO.y, PHOTO.w, PHOTO.h, PHOTO.r);
-  ctx.fillStyle = '#1f1812';
+  ctx.fillStyle = '#080b12';
   ctx.fill();
   if (includePhoto && photo) {
     ctx.clip();
@@ -253,9 +253,9 @@ export function drawPhoto(ctx, photo, x, y, w, h) {
   ctx.drawImage(photo, sx, sy, sw, sh, x, y, w, h);
   // gentle grade to sit the bright studio backdrop into the dark card
   const g = ctx.createLinearGradient(0, y, 0, y + h);
-  g.addColorStop(0, 'rgba(31,24,18,0.30)');
-  g.addColorStop(0.45, 'rgba(31,24,18,0.0)');
-  g.addColorStop(1, 'rgba(31,24,18,0.42)');
+  g.addColorStop(0, 'rgba(8,11,18,0.30)');
+  g.addColorStop(0.45, 'rgba(8,11,18,0.0)');
+  g.addColorStop(1, 'rgba(8,11,18,0.42)');
   ctx.fillStyle = g;
   ctx.fillRect(x, y, w, h);
   corners(ctx, x + 22, y + 22, w - 44, h - 44);
@@ -268,7 +268,7 @@ export function drawPhoto(ctx, photo, x, y, w, h) {
   const px = x + 46;
   const py = y + h - 52;
   rr(ctx, px - 16, py - 34, lw + 70, 50, 25);
-  ctx.fillStyle = 'rgba(31,24,18,0.72)';
+  ctx.fillStyle = 'rgba(8,11,18,0.72)';
   ctx.fill();
   ctx.fillStyle = C.accent;
   ctx.beginPath();
@@ -285,12 +285,12 @@ export function drawBack(canvas) {
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  surface(ctx, w, h, '#2a2018', 23);
+  surface(ctx, w, h, '#151b27', 23);
   // the back is seen mirrored through the slot, so the slot sits at the same place
   slotRing(ctx);
 
   // stripe
-  ctx.fillStyle = '#1b1510';
+  ctx.fillStyle = '#0e111a';
   ctx.fillRect(0, 170, w, 120);
   ctx.fillStyle = 'rgba(255,255,255,0.04)';
   ctx.fillRect(0, 170, w, 2);
@@ -335,11 +335,11 @@ export function drawBack(canvas) {
   const sy = h - 330;
   ctx.save();
   rr(ctx, 64, sy, w - 128, 120, 12);
-  ctx.fillStyle = '#d9d2cd';
+  ctx.fillStyle = '#d5dce6';
   ctx.fill();
   ctx.clip();
   ctx.globalAlpha = 0.18;
-  ctx.strokeStyle = '#857264';
+  ctx.strokeStyle = '#7a8aa3';
   for (let i = -20; i < 60; i++) {
     ctx.beginPath();
     ctx.moveTo(64 + i * 22, sy);
@@ -347,7 +347,7 @@ export function drawBack(canvas) {
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
-  ctx.fillStyle = '#36291f';
+  ctx.fillStyle = '#1b2233';
   ctx.font = `italic 72px ${SERIF}`;
   ctx.fillText(profile.name, 96, sy + 86);
   ctx.restore();
