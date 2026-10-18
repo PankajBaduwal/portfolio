@@ -1,6 +1,17 @@
+import { Fragment } from 'react';
 import { about, profile } from '../data/portfolio.js';
 import { useScrollProgress } from '../lib/hooks.js';
 import { Reveal, SectionHead } from './Common.jsx';
+
+// Words wrapped one by one so the scroll engine can light them up in reading order.
+function ScrubWords({ text }) {
+  return text.split(' ').map((w, i) => (
+    <Fragment key={i}>
+      {i > 0 && ' '}
+      <span className="sw">{w}</span>
+    </Fragment>
+  ));
+}
 
 export default function About() {
   const stageRef = useScrollProgress('--p');
@@ -35,7 +46,7 @@ export default function About() {
           <div className="about__body">
             {about.paragraphs.map((p, i) => (
               <Reveal as="p" key={i} delay={i * 100} variant="right">
-                {p}
+                <ScrubWords text={p} />
               </Reveal>
             ))}
           </div>

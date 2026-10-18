@@ -27,12 +27,24 @@ export default function App() {
   });
   const skip = useCallback(() => setIntro(false), []);
   const [cardThumb, setCardThumb] = useState(null);
-  // first visit only: a copper wipe uncovers the page before the card swings in
+  // first visit only: an emerald wipe uncovers the page before the card swings in
   const [curtain] = useState(intro);
 
   useEffect(() => initPointerFx(), []);
   useEffect(() => initScrollProgress(), []);
   useEffect(() => initParallax(), []);
+  // the GSAP scroll engine loads after first paint so it never delays the hero
+  useEffect(() => {
+    let off = () => {};
+    let gone = false;
+    import('./lib/scrollFx.js').then(({ initScrollFx }) => {
+      if (!gone) off = initScrollFx();
+    });
+    return () => {
+      gone = true;
+      off();
+    };
+  }, []);
 
   useEffect(() => {
     if (!intro) return undefined;
