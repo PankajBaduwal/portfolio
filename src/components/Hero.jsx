@@ -48,6 +48,7 @@ export default function Hero({ introActive, onSkipIntro, onCardFace }) {
     hovering: false,
     dragging: false,
     grab: null,
+    scroll: 0,
   });
 
   // Draw card faces once fonts and the photo are available.
@@ -106,6 +107,8 @@ export default function Hero({ introActive, onSkipIntro, onCardFace }) {
       raf = 0;
       const hp = Math.min(1, Math.max(0, window.scrollY / (el.offsetHeight * 0.85)));
       el.style.setProperty('--hp', hp.toFixed(3));
+      // the WebGL card reads the same progress and turns away in 3D as the hero leaves
+      control.current.scroll = hp;
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);

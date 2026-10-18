@@ -51,7 +51,7 @@ export function SectionHead({ index, label, title, italic, desc, id }) {
 }
 
 /** Accessible modal built on the native <dialog> element (focus trap + Esc for free). */
-export function Dialog({ open, onClose, labelledBy, className = '', children }) {
+export function Dialog({ open, onClose, labelledBy, className = '', style, children }) {
   const ref = useRef(null);
   useEffect(() => {
     const d = ref.current;
@@ -68,6 +68,7 @@ export function Dialog({ open, onClose, labelledBy, className = '', children }) 
     <dialog
       ref={ref}
       className={`dialog ${className}`}
+      style={style}
       aria-labelledby={labelledBy}
       onClose={onClose}
       onClick={(e) => {

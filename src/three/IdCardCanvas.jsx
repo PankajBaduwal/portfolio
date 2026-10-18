@@ -160,8 +160,9 @@ function makeStrapTexture(anisotropy) {
   return t;
 }
 
-function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
+function Card({ faces, control, introRef, reducedMotion, bleedTop, lowPower }) {
   const outer = useRef();
+  const photoRef = useRef();
   const inner = useRef();
   const strap = useRef();
   const sweep = useRef();
@@ -214,7 +215,7 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
   useEffect(() => () => Object.values(geos).forEach((g) => g.dispose()), [geos]);
 
   const faceZ = DEPTH / 2 + BEVEL + 0.0006;
-  const springs = useRef({ rx: { x: 0, v: 0 }, ry: { x: 0, v: 0 }, rz: { x: 0, v: 0 }, tx: { x: 0, v: 0 } }).current;
+  const springs = useRef({ rx: { x: 0, v: 0 }, ry: { x: 0, v: 0 }, rz: { x: 0, v: 0 }, tx: { x: 0, v: 0 }, sc: { x: 0, v: 0 } }).current;
 
   // Frame layout. The canvas bleeds `bleedTop` of the stage height above it,
   // 10% below and 40% to each side; fit the card to the stage's share of it.
@@ -299,8 +300,14 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
     spring(springs.rz, Math.atan2(d.x, -d.y), dt, 55, 7);
     spring(springs.tx, -Math.asin(THREE.MathUtils.clamp(d.z, -1, 1)), dt, 55, 7);
 
-    const tx = c.base.rx + c.tilt.rx + (1 - e) * 0.32;
-    const ty = c.base.ry + c.tilt.ry + (1 - e) * -1.15 + idle * Math.sin(t * 0.35) * 0.05;
+    // scroll: as the hero leaves, the card tips back, turns and recedes to the side.
+    // A stiff spring keeps it glued to the scrollbar while smoothing wheel steps.
+    spring(springs.sc, reducedMotion ? 0 : c.scroll || 0, dt, 160, 24);
+    // eased so the turn reads early in the scroll
+    const raw = Math.min(1, Math.max(0, springs.sc.x));
+    const sc = (1 - (1 - raw) * (1 - raw)) * (lowPower ? 0.7 : 1);
+    const tx = c.base.rx + c.tilt.rx + (1 - e) * 0.32 - sc * 1.05;
+    const ty = c.base.ry + c.tilt.ry + (1 - e) * -1.15 + idle * Math.sin(t * 0.35) * 0.05 - sc * 0.95;
     if (c.dragging) {
       springs.ry.x = ty;
       springs.ry.v = 0;
@@ -309,8 +316,16 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
 
     const o = outer.current;
     o.position.copy(endP);
-    o.rotation.set(springs.tx.x, 0, springs.rz.x, 'ZXY');
-    o.scale.setScalar(scale * (0.94 + 0.06 * e));
+    o.position.x += sc * layout.vw * 0.2;
+    o.position.z -= sc * 2.4;
+    o.position.y -= sc * layout.stageH * 0.3;
+    o.rotation.set(springs.tx.x, 0, springs.rz.x + sc * 0.12, 'ZXY');
+    o.scale.setScalar(scale * (0.94 + 0.06 * e) * (1 - sc * 0.12));
+    // the photo laminate lifts off the card as it turns, so its layers separate in depth
+    if (photoRef.current) photoRef.current.position.z = faceZ + 0.0035 + sc * 0.03;
+    // the camera rises a little and looks down onto the tipped card, like moving past it
+    state.camera.position.y = sc * 0.6;
+    state.camera.lookAt(0, 0, 0);
     inner.current.rotation.set(springs.rx.x, springs.ry.x, 0);
 
     // strap: a camera-facing ribbon along the rope, ending at the clamp
@@ -379,7 +394,7 @@ function Card({ faces, control, introRef, reducedMotion, bleedTop }) {
             <mesh geometry={geos.face} position-z={faceZ}>
               <meshPhysicalMaterial map={front} roughness={0.55} metalness={0.05} clearcoat={0.35} clearcoatRoughness={0.4} />
             </mesh>
-            <mesh geometry={geos.photoGeo} position-z={faceZ + 0.0035}>
+            <mesh ref={photoRef} geometry={geos.photoGeo} position-z={faceZ + 0.0035}>
               <meshPhysicalMaterial map={photo} roughness={0.28} metalness={0} clearcoat={1} clearcoatRoughness={0.12} />
             </mesh>
             <mesh geometry={geos.face} position-z={-faceZ} rotation-y={Math.PI}>
@@ -412,7 +427,7 @@ export default function IdCardCanvas({ faces, control, introRef, reducedMotion, 
         onReady?.();
       }}
     >
-      <Card faces={faces} control={control} introRef={introRef} reducedMotion={reducedMotion} bleedTop={bleedTop} />
+      <Card faces={faces} control={control} introRef={introRef} reducedMotion={reducedMotion} bleedTop={bleedTop} lowPower={lowPower} />
     </Canvas>
   );
 }

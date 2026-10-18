@@ -399,9 +399,16 @@ main,
 }
 @media print {
   .reveal,
-  .project-grid .project {
+  .project-grid .project,
+  .section > .container,
+  .section-head__title,
+  .keyrow {
     opacity: 1 !important;
     animation: none !important;
+    clip-path: none !important;
+  }
+  .ambient {
+    display: none;
   }
 }
 
@@ -3254,8 +3261,11 @@ button.cred__mount:focus-visible img {
   .hero__foot {
     translate: 0 calc(var(--hp, 0) * -18px);
   }
+  /* the WebGL card does its own 3D turn; the stage only eases back and lets it go */
   .hero__stage {
-    transform: perspective(1400px) translateY(calc(var(--hp, 0) * -4%)) rotateX(calc(var(--hp, 0) * 12deg)) scale(calc(1 - var(--hp, 0) * 0.22));
+    /* trails the page a little so the card stays in view while it turns */
+    transform: translateY(calc(var(--hp, 0) * 24vh)) scale(calc(1 - var(--hp, 0) * 0.1));
+    opacity: calc(1 - var(--hp, 0) * 0.6);
   }
 }
 
@@ -3344,6 +3354,369 @@ button.cred__mount:focus-visible img {
     translate: 0 var(--drift, 8px);
   }
 }
+
+/* =========================================================================
+   Scroll-driven 3D: everything below is tied to scroll position, not timers.
+   All of it sits behind prefers-reduced-motion: no-preference, and the
+   scroll-timeline parts behind @supports, so content is plain and visible
+   wherever they don't run.
+   ========================================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  /* hero: the backdrop sinks slower than the page and the big headline folds away */
+  .hero::before {
+    translate: 0 calc(var(--hp, 0) * 22%);
+    scale: calc(1 + var(--hp, 0) * 0.12);
+  }
+  .hero__headline {
+    transform-origin: 0 100%;
+    scale: calc(1 - var(--hp, 0) * 0.28);
+    opacity: calc(1 - var(--hp, 0) * 0.9);
+  }
+  .hero__headline-2 {
+    transform-origin: 100% 0;
+    scale: calc(1 + var(--hp, 0) * 0.08);
+    opacity: calc(1 - var(--hp, 0) * 0.8);
+  }
+  /* CSS fallback card (no WebGL): the same tip-back and turn, from the same progress */
+  .card-css__body {
+    transform: translate3d(calc(var(--hp, 0) * 16%), 0, calc(var(--hp, 0) * -220px)) rotateX(calc(var(--rx, 0deg) + var(--hp, 0) * -42deg))
+      rotateY(calc(var(--ry, 0deg) + var(--hp, 0) * -40deg));
+  }
+  .card-css:not([data-dragging='true']) .card-css__body {
+    transition: transform 0.25s var(--ease);
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+  .hero__grid {
+    transform: perspective(1600px) translateZ(calc(var(--hp, 0) * -140px));
+    transform-origin: 50% 0;
+  }
+}
+
+/* ambient light: soft pools and two outlines drifting at different depths */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ambient__orb,
+.ambient__shape {
+  position: absolute;
+  will-change: transform;
+}
+.ambient__orb {
+  width: 64vmax;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(240, 138, 75, 0.09), transparent);
+}
+.ambient__orb::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(232, 178, 106, 0.08), transparent);
+  animation: orb-breathe 14s ease-in-out infinite alternate;
+}
+.ambient__orb--a {
+  left: -24vmax;
+  top: -18vmax;
+}
+.ambient__orb--b {
+  right: -30vmax;
+  top: 30vh;
+  background: radial-gradient(closest-side, rgba(176, 82, 96, 0.08), transparent);
+}
+.ambient__orb--b::before {
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+.ambient__shape {
+  width: 120px;
+  aspect-ratio: 1;
+  border: 1px solid rgba(240, 138, 75, 0.12);
+  border-radius: 18px;
+  rotate: 24deg;
+}
+.ambient__shape--a {
+  left: 6vw;
+  top: 70vh;
+}
+.ambient__shape--b {
+  right: 9vw;
+  top: 18vh;
+  width: 72px;
+  border-radius: 50%;
+  border-color: rgba(232, 178, 106, 0.14);
+}
+@keyframes orb-breathe {
+  to {
+    transform: scale(1.25) translate3d(6%, -4%, 0);
+    opacity: 0.6;
+  }
+}
+@media (max-width: 760px) {
+  .ambient__shape {
+    display: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* ambient layers move with the whole page at different rates */
+    .ambient__orb--a {
+      animation: drift-a linear both;
+      animation-timeline: scroll(root);
+    }
+    .ambient__orb--b {
+      animation: drift-b linear both;
+      animation-timeline: scroll(root);
+    }
+    .ambient__shape--a {
+      animation: drift-shape-a linear both;
+      animation-timeline: scroll(root);
+    }
+    .ambient__shape--b {
+      animation: drift-shape-b linear both;
+      animation-timeline: scroll(root);
+    }
+
+    /* selected scenes approach from deeper in the page, and the outgoing ones sink back */
+    .section.about > .container,
+    .section.skills > .container,
+    .section.projects > .container,
+    .section.contact > .container {
+      transform-origin: 50% 0;
+      animation: scene-approach linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 85vh;
+    }
+    .section.contact > .container {
+      animation: scene-approach linear backwards, scene-open linear backwards;
+      animation-timeline: view(), view();
+      animation-range: entry 0% entry 85vh, entry 0% entry 70vh;
+    }
+
+    /* section titles: words flip up out of their masks, then the title sinks as it leaves */
+    .mask {
+      perspective: 600px;
+    }
+    .mask__in {
+      transform-origin: 50% 100%;
+      transform: translateY(105%) rotateX(-75deg);
+    }
+    .section-head__title {
+      animation: title-grow linear both, title-sink linear forwards;
+      animation-timeline: view(), view();
+      animation-range: entry 0% cover 45%, exit 0% exit 100%;
+    }
+
+    /* skills: each keyboard row rises from its own depth */
+    .keyrow {
+      animation: row-rise linear backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+    .keyrow:nth-child(even) {
+      --row-z: -120px;
+      --row-r: -22deg;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (min-width: 900px) {
+    .section.about > .container,
+    .section.skills > .container,
+    .section.projects > .container {
+      animation: scene-approach linear backwards, scene-recede linear forwards;
+      animation-timeline: view(), view();
+      animation-range: entry 0% entry 85vh, exit 45% exit 100%;
+    }
+  }
+
+  /* projects, two or more columns: cards fan in from depth and fall back as they leave */
+  @media (prefers-reduced-motion: no-preference) and (min-width: 641px) {
+    .project-grid:not(.is-in) .project {
+      opacity: 1;
+    }
+    .project-grid .project,
+    .project-grid.is-in .project {
+      --fan: calc((var(--i, 0) - 1) * 16deg);
+      animation: card-approach linear backwards, card-recede linear forwards;
+      animation-timeline: view(), view();
+      animation-range: entry 0% entry 85%, exit 10% exit 100%;
+    }
+  }
+
+  /* projects, one column: the cards stack, each new one sliding over the last */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 640px) {
+    .project-grid {
+      timeline-scope: --pc1, --pc2, --pc3, --pc4, --pc5, --pc6, --pc7, --pc8;
+    }
+    .project-grid:not(.is-in) .project {
+      opacity: 1;
+    }
+    .project-grid .project,
+    .project-grid.is-in .project {
+      position: sticky;
+      top: calc(var(--nav-h) + 12px + var(--stack, 0) * 10px);
+      animation: card-approach-sm linear backwards, card-stack linear forwards;
+      animation-timeline: view(), var(--next-card, none);
+      animation-range: entry 0% entry 80%, entry 40% contain 60%;
+      transform-origin: 50% 0;
+    }
+    /* a keyboard-focused card rises above the stack so its buttons are never covered */
+    .project:focus-within {
+      z-index: 2;
+    }
+    .project:nth-child(1) { --stack: 0; view-timeline-name: --pc1; --next-card: --pc2; }
+    .project:nth-child(2) { --stack: 1; view-timeline-name: --pc2; --next-card: --pc3; }
+    .project:nth-child(3) { --stack: 2; view-timeline-name: --pc3; --next-card: --pc4; }
+    .project:nth-child(4) { --stack: 3; view-timeline-name: --pc4; --next-card: --pc5; }
+    .project:nth-child(5) { --stack: 4; view-timeline-name: --pc5; --next-card: --pc6; }
+    .project:nth-child(6) { --stack: 5; view-timeline-name: --pc6; --next-card: --pc7; }
+    .project:nth-child(7) { --stack: 6; view-timeline-name: --pc7; --next-card: --pc8; }
+    .project:nth-child(8) { --stack: 7; view-timeline-name: --pc8; }
+  }
+}
+
+@keyframes drift-a {
+  to {
+    transform: translate3d(28vw, 70vh, 0) scale(1.2);
+  }
+}
+@keyframes drift-b {
+  from {
+    transform: translate3d(0, 30vh, 0);
+  }
+  to {
+    transform: translate3d(-24vw, -40vh, 0) scale(0.9);
+  }
+}
+@keyframes drift-shape-a {
+  to {
+    transform: translate3d(8vw, -120vh, 0) rotate(160deg);
+  }
+}
+@keyframes drift-shape-b {
+  to {
+    transform: translate3d(-6vw, 60vh, 0) rotate(-90deg);
+  }
+}
+@keyframes scene-approach {
+  from {
+    opacity: 0.2;
+    transform: perspective(1600px) translate3d(0, 140px, -320px) rotateX(12deg);
+  }
+}
+@keyframes scene-recede {
+  to {
+    opacity: 0.25;
+    transform: perspective(1600px) translate3d(0, -60px, -260px) rotateX(-8deg);
+  }
+}
+@keyframes scene-open {
+  from {
+    clip-path: inset(12% 10% 0 10% round 48px);
+  }
+  to {
+    clip-path: inset(-60px -60px -60px -60px round 0);
+  }
+}
+@keyframes title-sink {
+  to {
+    opacity: 0.3;
+    transform: perspective(900px) translateZ(-120px) rotateX(18deg);
+  }
+}
+@keyframes row-rise {
+  from {
+    opacity: 0;
+    transform: perspective(1200px) translate3d(0, 70px, var(--row-z, -260px)) rotateX(var(--row-r, 34deg));
+  }
+}
+@keyframes card-approach {
+  from {
+    opacity: 0;
+    transform: perspective(1400px) translate3d(0, 140px, -340px) rotateX(26deg) rotateY(var(--fan, 0deg));
+  }
+}
+@keyframes card-recede {
+  to {
+    opacity: 0.3;
+    transform: perspective(1400px) translate3d(0, -40px, -240px) rotateX(-16deg) scale(0.96);
+  }
+}
+/* stacked cards overlap, so they dim with brightness rather than see-through opacity */
+@keyframes card-approach-sm {
+  from {
+    transform: perspective(1000px) translate3d(0, 80px, -160px) rotateX(18deg);
+  }
+}
+@keyframes card-stack {
+  to {
+    filter: brightness(0.5);
+    transform: perspective(1000px) translateZ(-90px) rotateX(5deg);
+  }
+}
+
+/* skills: keys bob very slightly, each at its own pace (desktop only) */
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (min-width: 900px) {
+  .keyrow.is-lit .key {
+    animation: key-float 5.2s ease-in-out infinite alternate;
+  }
+  .keyrow.is-lit .key:nth-child(3n + 1) {
+    animation-duration: 4.4s;
+    animation-delay: -1.3s;
+  }
+  .keyrow.is-lit .key:nth-child(3n + 2) {
+    animation-duration: 6.1s;
+    animation-delay: -2.7s;
+  }
+}
+@keyframes key-float {
+  to {
+    translate: 0 -3px;
+  }
+}
+
+/* project cover: a soft specular sheen follows the pointer across the artwork */
+.project .cover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 236, 214, 0.16), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.project:hover .cover::after {
+  opacity: 1;
+}
+
+/* project details open out of the card that was clicked, then their content follows */
+.dialog--project[open] {
+  animation: dialog-expand 0.6s var(--ease);
+}
+@keyframes dialog-expand {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--fx, 0px), var(--fy, 24px), 0) scale(var(--fs, 0.94));
+    border-radius: 40px;
+  }
+}
+.dialog--project[open] .pdetail > * {
+  animation: reveal-up 0.6s var(--ease) calc(240ms + var(--n, 0) * 60ms) backwards;
+}
+.pdetail > :nth-child(2) { --n: 1; }
+.pdetail > :nth-child(3) { --n: 2; }
+.pdetail > :nth-child(4) { --n: 3; }
+.pdetail > :nth-child(5) { --n: 4; }
+.pdetail > :nth-child(6) { --n: 5; }
+.pdetail > :nth-child(7) { --n: 6; }
+.pdetail > :nth-child(n + 8) { --n: 7; }
 
 /* =========================================================================
    Reduced motion: everything stays, nothing travels.
