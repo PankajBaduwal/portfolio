@@ -4002,3 +4002,55 @@ button.cred__mount:focus-visible img {
     display: none;
   }
 }
+
+/* =========================================================================
+   Scroll engine (src/lib/scrollFx.js): smooth scrolling and the pinned services track
+   ========================================================================= */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+/* About copy: words start dim only once the engine is driving them */
+.about__body .sw {
+  will-change: opacity;
+}
+/* services, wide screens: one long row that the page scroll slides sideways while the section is pinned */
+.services.is-track {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+.services.is-track > .container {
+  width: 100%;
+}
+.services.is-track .service-grid {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.services.is-track .service {
+  flex: none;
+  width: clamp(340px, 30vw, 420px);
+}
+/* a thin rule under the row fills as the row slides */
+.services.is-track > .container::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin-top: 28px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent) calc(var(--track, 0) * 100%), var(--line) 0);
+}
+/* while pinned, the title holds still instead of following its view-timeline fade */
+.services.is-track .section-head__title {
+  animation: none;
+}
