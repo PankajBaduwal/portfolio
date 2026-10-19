@@ -337,9 +337,12 @@ export const navItems = [
   { id: 'about', label: 'About' },
   { id: 'education', label: 'Education' },
   { id: 'skills', label: 'Skills' },
+  // menuOnly: listed in the phone/tablet menu, left out of the desktop bar to keep it to one line
+  { id: 'services', label: 'Services', menuOnly: true },
   { id: 'projects', label: 'Projects' },
   { id: 'experience', label: 'Experience' },
   { id: 'certifications', label: 'Certifications' },
+  { id: 'achievements', label: 'Achievements', menuOnly: true },
   { id: 'contact', label: 'Contact' },
 ];
 
