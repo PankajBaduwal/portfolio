@@ -57,7 +57,8 @@ html {
   scroll-padding-top: calc(var(--nav-h) + 12px);
   -webkit-text-size-adjust: 100%;
 }
-html.has-dialog {
+html.has-dialog,
+html.has-menu {
   overflow: hidden;
 }
 body {
@@ -1452,7 +1453,7 @@ main,
 .spec-list li:nth-child(odd) {
   padding-right: 16px;
 }
-@media (max-width: 860px) {
+@media (max-width: 700px) {
   .about__grid {
     grid-template-columns: 1fr;
   }
@@ -1631,7 +1632,7 @@ main,
 .edu-list {
   display: none;
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .rail {
     display: none;
   }
@@ -4053,4 +4054,155 @@ html.lenis body {
 /* while pinned, the title holds still instead of following its view-timeline fade */
 .services.is-track .section-head__title {
   animation: none;
+}
+
+/* =========================================================================
+   Phones and tablets: everything below is scoped to narrow widths or touch
+   input, so the desktop layout (1024px and up, mouse) is untouched.
+   ========================================================================= */
+
+/* menu-only links (Services, Achievements, résumé) stay out of the desktop bar */
+.nav__menu-only {
+  display: none;
+}
+@media (max-width: 960px) {
+  .nav__inner {
+    padding-left: max(var(--gutter), env(safe-area-inset-left));
+    padding-right: max(var(--gutter), env(safe-area-inset-right));
+  }
+  .nav__menu-only {
+    display: block;
+  }
+  .nav__links {
+    max-height: calc(100dvh - var(--nav-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    /* solid, so the big hero type never ghosts through the list */
+    background: var(--bg);
+    box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8);
+  }
+  .nav.is-open {
+    background: var(--bg);
+  }
+  .nav__links a[aria-current='true'] {
+    color: var(--accent);
+  }
+  .nav__menu-cta {
+    padding-top: 18px;
+  }
+  .nav__links .nav__menu-cta a {
+    display: flex;
+    width: 100%;
+    padding: 0 22px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-size: 15px;
+  }
+  .nav__links .nav__menu-cta a::after {
+    display: none;
+  }
+  /* a dim veil over the page while the menu is open; tapping it closes the menu */
+  .nav::before {
+    content: '';
+    position: fixed;
+    inset: var(--nav-h) 0 0;
+    background: rgba(5, 8, 6, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    pointer-events: none;
+  }
+  .nav.is-open::before {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+@media (max-width: 960px) and (prefers-reduced-motion: no-preference) {
+  .nav.is-open .nav__links li {
+    animation: menu-item 0.45s var(--ease) both;
+    animation-delay: calc(var(--i, 0) * 28ms + 40ms);
+  }
+}
+@keyframes menu-item {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* hero, phones: the lanyard fades out before it reaches the headline */
+@media (max-width: 760px) {
+  .card-gl {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, transparent 8%, #000 22%);
+    mask-image: linear-gradient(180deg, transparent 0, transparent 8%, #000 22%);
+  }
+  .hero__stage {
+    margin-top: 8px;
+  }
+}
+/* phones held sideways: the card gets the full height without pushing the copy away */
+@media (max-height: 500px) and (orientation: landscape) and (max-width: 1023px) {
+  .hero__stage {
+    height: 86svh;
+    min-height: 300px;
+  }
+}
+
+/* education rail, landscape tablets and small laptops: room above the rail so the year flags
+   never sit on the section intro */
+@media (min-width: 901px) and (max-width: 1279px) {
+  .rail {
+    margin-top: 80px;
+  }
+}
+
+/* about, tablets: portrait and story side by side */
+@media (min-width: 701px) and (max-width: 1023px) {
+  .about__grid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(28px, 5vw, 56px);
+    align-items: start;
+  }
+  .about__stage {
+    position: sticky;
+    top: calc(var(--nav-h) + 32px);
+    padding-top: 24px;
+  }
+}
+
+/* phones: small print never drops below a readable size */
+@media (max-width: 767px) {
+  .key__note,
+  .ach__latest,
+  .about__tag-k,
+  .cred__provider,
+  .hint--touch,
+  .terminal__k,
+  .about__tag span {
+    font-size: 11.5px;
+  }
+  .terminal__info {
+    padding-top: 84px;
+  }
+}
+
+/* touch: small text links get a finger-sized hit area without changing how they look */
+@media (pointer: coarse) {
+  .meta-list__link,
+  .cred__verify,
+  .terminal__rows a {
+    position: relative;
+  }
+  .meta-list__link::before,
+  .cred__verify::before,
+  .terminal__rows a::before,
+  .scroll-cue::before {
+    content: '';
+    position: absolute;
+    inset: -11px -4px;
+  }
+  .terminal__rows li {
+    padding-block: 16px;
+  }
 }

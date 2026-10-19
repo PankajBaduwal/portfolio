@@ -31,8 +31,8 @@ export function initScrollFx() {
     const tick = (t) => lenis.raf(t * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
-    // an open dialog locks the page, so the smooth scroller pauses with it
-    const lock = new MutationObserver(() => (root.classList.contains('has-dialog') ? lenis.stop() : lenis.start()));
+    // an open dialog or menu locks the page, so the smooth scroller pauses with it
+    const lock = new MutationObserver(() => (root.classList.contains('has-dialog') || root.classList.contains('has-menu') ? lenis.stop() : lenis.start()));
     lock.observe(root, { attributes: true, attributeFilter: ['class'] });
     offs.push(() => {
       lock.disconnect();

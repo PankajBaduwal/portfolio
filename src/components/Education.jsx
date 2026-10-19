@@ -32,7 +32,7 @@ export default function Education() {
       <div className="container">
         <SectionHead index="02" label="Education" title="Academic" italic="background" desc="A strong academic foundation in Information Technology and AI/ML." id="edu-title" />
 
-        {/* Spatial rail (tablet & desktop) */}
+        {/* Spatial rail (landscape tablet & desktop) */}
         <Reveal className="rail" variant="blur" aria-label="Education timeline">
           <div className="rail__plane">
             <div className="rail__track">
@@ -87,7 +87,7 @@ export default function Education() {
           </div>
         </Reveal>
 
-        {/* Linear timeline (mobile) */}
+        {/* Linear timeline (phones & portrait tablets) */}
         <ol className="edu-list">
           {education.map((e) => (
             <li key={e.id} className="edu-list__item">
